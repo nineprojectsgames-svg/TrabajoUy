@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TrabajoUY - Servicios laborales en Uruguay</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: #eef2f5;
+            color: #1e2a3e;
+            padding-bottom: 70px;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .header {
+            background: #0f2b3d;
+            color: white;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+        .header span { color: #4fc3f7; }
+
+        .view {
+            padding: 1rem;
+            display: none;
+            animation: fade 0.2s ease;
+        }
+        .view.active { display: block; }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(5px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* Tarjetas */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .badge {
+            background: #e1f5fe;
+            color: #0277bd;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.4rem 0;
+        }
+        .price-tag {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .btn-outline, .btn-primary {
+            background: none;
+            border: 1px solid #2c7da0;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            color: #2c7da0;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: #2c7da0;
+            color: white;
+            border: none;
+            justify-content: center;
+        }
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0.6rem 1rem 1rem;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #8a9bb5;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .nav-item i { font-size: 1.5rem; }
+        .nav-item.active { color: #1f6392; font-weight: 500; }
+
+        /* Formularios */
+        .form-group { margin-bottom: 1rem; }
+        label { font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            font-family: inherit;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .filter-bar select, .filter-bar input {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .tag {
+            background: #eef2ff;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            margin: 4px 4px 0 0;
+        }
+        .logout-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 8px;
+            border-radius: 40px;
+            width: 100%;
+            margin-top: 1rem;
+            color: #b91c1c;
+            font-weight: 500;
+        }
+        .wa-btn { background: #25D366; color: white; width: 100%; padding: 12px; border-radius: 40px; border: none; margin-top: 0.5rem; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+<div class="app-container" id="appRoot">
+    <div class="header">🇺🇾 Trabajo<span>UY</span></div>
+
+    <!-- Pantalla Login/Registro -->
+    <div id="authScreen" class="view active">
+        <div class="card" style="margin-top: 2rem;">
+            <i class="fas fa-briefcase" style="font-size: 2rem; color:#2c7da0;"></i>
+            <h2>Bienvenido</h2>
+            <div id="loginForm">
+                <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="usuario@ejemplo.uy"></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword"></div>
+                <button class="btn-primary" style="width:100%" id="doLoginBtn">Iniciar sesión</button>
+                <div class="toggle-link" id="showRegisterBtn" style="text-align:center; margin-top:1rem; color:#2c7da0; cursor:pointer;">¿No tienes cuenta? Regístrate</div>
+                <div id="forgotPasswordBtn" style="text-align:center; margin-top:0.5rem; font-size:0.8rem; color:#6c757d; cursor:pointer;">¿Olvidaste tu contraseña?</div>
+            </div>
+            <div id="registerForm" style="display:none;">
+                <div class="form-group"><label>Email</label><input type="email" id="regEmail"></div>
+                <div class="form-group"><label>Contraseña</label><input type="password" id="regPassword"></div>
+                <button class="btn-primary" style="width:100%" id="doRegisterBtn">Registrarme</button>
+                <div class="toggle-link" id="showLoginBtn" style="text-align:center; margin-top:1rem; cursor:pointer;">← Volver</div>
+            </div>
+            <div id="resetPasswordDiv" style="display:none;">
+                <div class="form-group"><label>Ingresa tu email para restablecer</label><input type="email" id="resetEmail" placeholder="ejemplo@dominio.uy"></div>
+                <button class="btn-primary" id="doResetBtn">Enviar enlace</button>
+                <div class="toggle-link" id="backToLoginFromReset" style="margin-top:1rem; cursor:pointer;">← Volver al login</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App principal -->
+    <div id="appMain" style="display:none;">
+        <div id="feedView" class="view">
+            <div class="filter-bar">
+                <select id="filterCategory"><option value="">Todas las categorías</option></select>
+                <select id="filterOrder"><option value="recent">Más reciente</option><option value="price_asc">Menor precio</option><option value="price_desc">Mayor precio</option></select>
+                <input type="text" id="searchLocation" placeholder="Filtrar por ubicación" style="flex:1.5;">
+            </div>
+            <div id="feedList"></div>
+        </div>
+        <div id="detailView" class="view"><button id="backToFeedBtn" style="margin-bottom:12px; background:#eef2f6; border-radius:30px; padding:6px 14px;"><i class="fas fa-arrow-left"></i> Volver</button><div id="detailContent"></div></div>
+        <div id="publishView" class="view"><h3>Publicar nuevo llamado</h3><form id="publishForm"><div class="form-group"><label>Título *</label><input id="pubTitle" required></div><div class="form-group"><label>Categoría</label><select id="pubCategory"></select></div><div class="form-group"><label>Descripción completa *</label><textarea id="pubDesc" required></textarea></div><div class="form-group"><label>Precio (opcional)</label><input id="pubPrice" placeholder="Ej: $2500 o a convenir"></div><div class="form-group"><label>Ubicación (Barrio/Ciudad) *</label><input id="pubLocation" placeholder="Ej: Pocitos, Montevideo" required></div><div class="form-group"><label>Teléfono de contacto</label><input id="pubPhone" placeholder="099 123 456"></div><div class="form-group"><label>Email de contacto</label><input id="pubEmail" placeholder="opcional@mail.com"></div><button type="submit" class="btn-primary" style="width:100%">Publicar servicio</button></form></div>
+        <div id="profileView" class="view">
+            <div id="profileContent"></div>
+            <button id="editProfileBtn" class="btn-primary btn-sm" style="margin-top:1rem; width:100%; background:#475569;">✏️ Editar perfil</button>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+        </div>
+        <!-- Modal edición perfil simple -->
+        <div id="editProfileModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center;">
+            <div style="background:white; max-width:90%; width:400px; margin:auto; border-radius:28px; padding:1.5rem;">
+                <h3>Editar perfil</h3>
+                <div class="form-group"><label>Nombre</label><input id="editName" placeholder="Nombre completo"></div>
+                <div class="form-group"><label>Foto (emoji o inicial)</label><input id="editAvatar" placeholder="Ej: 👨‍🔧, 🧑‍🍳"></div>
+                <div class="form-group"><label>Descripción</label><textarea id="editDesc" rows="2"></textarea></div>
+                <div class="form-group"><label>Etiquetas de trabajos (separadas por coma)</label><input id="editTags" placeholder="Ej: electricidad, plomería, pintura"></div>
+                <button id="saveProfileBtn" class="btn-primary">Guardar cambios</button>
+                <button id="closeModalBtn" style="margin-top:8px; background:#e2e8f0; border:none; padding:8px; border-radius:40px; width:100%;">Cancelar</button>
+            </div>
+        </div>
+        <div class="bottom-nav"><div class="nav-item" data-nav="feed"><i class="fas fa-home"></i><span>Inicio</span></div><div class="nav-item" data-nav="publish"><i class="fas fa-plus-circle"></i><span>Publicar</span></div><div class="nav-item" data-nav="profile"><i class="fas fa-user"></i><span>Perfil</span></div></div>
+    </div>
+</div>
+
+<script>
+    // ---------- DATOS INICIALES ----------
+    let JOBS_MOCK = [
+        { id: "j1", title: "Reparación de pérdida de agua", category: "Plomero", shortDesc: "Fuga en cañería interna", fullDesc: "Pérdida en cocina, Cordón.", publisher: "Lucía Fernández", publisherEmail: "lucia@trabajouy.uy", phone: "+59899123456", emailContact: "lucia@trabajouy.uy", price: "$1800", location: "Cordón", date: Date.now() - 86400000 },
+        { id: "j2", title: "Instalación de AA", category: "Electricista", shortDesc: "Split 3000 frigorías", fullDesc: "Instalación completa en Pocitos", publisher: "Lucía Fernández", publisherEmail: "lucia@trabajouy.uy", phone: "+59899123456", emailContact: "", price: "$3500", location: "Pocitos", date: Date.now() - 172800000 },
+        { id: "j3", title: "Construcción de quincho", category: "Albañil", shortDesc: "Ampliación con parrillero", fullDesc: "Proyecto en Malvín", publisher: "Ramiro Silva", publisherEmail: "ramiro@trabajouy.uy", phone: "+59898765432", emailContact: "ramiro@construye.uy", price: "A convenir", location: "Malvín", date: Date.now() - 259200000 },
+        { id: "j4", title: "Pintura de fachada", category: "Pintor", shortDesc: "Casa dos plantas", fullDesc: "Pintura exterior en Carrasco", publisher: "Ramiro Silva", publisherEmail: "ramiro@trabajouy.uy", phone: "+59898765432", emailContact: "", price: "$4200", location: "Carrasco", date: Date.now() - 345600000 },
+        { id: "j5", title: "Mantenimiento de jardín", category: "Jardinero", shortDesc: "Corte césped y poda", fullDesc: "Terreno grande en Villa Biarritz", publisher: "Lucía Fernández", publisherEmail: "lucia@trabajouy.uy", phone: "+59899123456", emailContact: "", price: "$1500", location: "Villa Biarritz", date: Date.now() - 432000000 },
+        { id: "j6", title: "Reparación de PC", category: "Técnico informático", shortDesc: "Limpieza y formateo", fullDesc: "Notebook lenta, Ciudad Vieja", publisher: "Ramiro Silva", publisherEmail: "ramiro@trabajouy.uy", phone: "+59898765432", emailContact: "rami@tech.uy", price: "$1200", location: "Ciudad Vieja", date: Date.now() - 500000 },
+        { id: "j7", title: "Clases de guitarra", category: "Otro", shortDesc: "Nivel inicial", fullDesc: "Clases a domicilio en Punta Carretas", publisher: "Sofía Méndez", publisherEmail: "sofia@music.uy", phone: "099111222", emailContact: "sofia@music.uy", price: "$800", location: "Punta Carretas", date: Date.now() - 100000 }
+    ];
+    const CATEGORIES = ["Plomero","Electricista","Albañil","Pintor","Jardinero","Técnico informático","Otro"];
+
+    let USERS_MOCK = {
+        "lucia@trabajouy.uy": { id:1, name:"Lucía Fernández", email:"lucia@trabajouy.uy", password:"1234", avatarIcon:"👩‍🔧", description:"Técnica electricista y plomera, 12 años en Montevideo.", tags:["electricidad","plomería","reparaciones"], history:["Instalación eléctrica Cordón","Reparación termofón Pocitos"], reviews:[{author:"Martín",comment:"Excelente",stars:5},{author:"Ana",comment:"Muy bien",stars:5}] },
+        "ramiro@trabajouy.uy": { id:2, name:"Ramiro Silva", email:"ramiro@trabajouy.uy", password:"4321", avatarIcon:"👨‍🔧", description:"Albañil especialista en refacciones.", tags:["albañilería","construcción","revoque"], history:["Refacción baño Punta Carretas","Construcción paredes Carrasco"], reviews:[{author:"Sofía",comment:"Impecable",stars:5}] }
+    };
+    let currentUser = null;
+
+    // helpers
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;});}
+    function renderStars(rating){ let full=Math.floor(rating); let html=''; for(let i=0;i<full;i++) html+='<i class="fas fa-star"></i>'; for(let i=full;i<5;i++) html+='<i class="far fa-star"></i>'; return `<span style="color:#f5b042;">${html}</span>`; }
+    function getAvgStars(reviews){ if(!reviews.length) return 0; return reviews.reduce((a,b)=>a+b.stars,0)/reviews.length; }
+
+    function renderFeed(){
+        let category = document.getElementById("filterCategory")?.value || "";
+        let order = document.getElementById("filterOrder")?.value || "recent";
+        let locFilter = document.getElementById("searchLocation")?.value.toLowerCase() || "";
+        let filtered = [...JOBS_MOCK];
+        if(category) filtered = filtered.filter(j=> j.category === category);
+        if(locFilter) filtered = filtered.filter(j=> j.location.toLowerCase().includes(locFilter));
+        if(order === "price_asc") filtered.sort((a,b)=> (parseInt(a.price)||0) - (parseInt(b.price)||0));
+        else if(order === "price_desc") filtered.sort((a,b)=> (parseInt(b.price)||0) - (parseInt(a.price)||0));
+        else filtered.sort((a,b)=> b.date - a.date);
+        const container = document.getElementById("feedList");
+        if(!container) return;
+        container.innerHTML = filtered.map(job => `
+            <div class="card">
+                <div class="flex-between"><h3>${escapeHtml(job.title)}</h3><span class="price-tag">${escapeHtml(job.price || "Sin precio")}</span></div>
+                <span class="badge">${job.category}</span>
+                <p style="margin:6px 0">📍 ${escapeHtml(job.location)}</p>
+                <p style="font-size:0.85rem">${escapeHtml(job.shortDesc)}</p>
+                <div class="publicante"><i class="fas fa-user"></i> ${escapeHtml(job.publisher)}</div>
+                <button class="btn-outline view-detail-btn" data-id="${job.id}">Ver más <i class="fas fa-arrow-right"></i></button>
+            </div>
+        `).join('');
+        document.querySelectorAll('.view-detail-btn').forEach(btn=> btn.addEventListener('click',(e)=> showDetail(btn.getAttribute('data-id'))));
+    }
+
+    function showDetail(jobId){
+        const job = JOBS_MOCK.find(j=> j.id === jobId);
+        if(!job) return;
+        let contactHtml = '';
+        if(job.phone) contactHtml += `<div><i class="fas fa-phone"></i> Tel: ${escapeHtml(job.phone)}</div>`;
+        if(job.emailContact) contactHtml += `<div><i class="fas fa-envelope"></i> Email: ${escapeHtml(job.emailContact)}</div>`;
+        const waMsg = encodeURIComponent(`Hola, vi tu llamado "${job.title}" en TrabajoUY, me interesa.`);
+        const waUrl = job.phone ? `https://wa.me/${job.phone.replace(/[^0-9+]/g,'')}?text=${waMsg}` : '#';
+        document.getElementById("detailContent").innerHTML = `
+            <div class="card"><h2>${escapeHtml(job.title)}</h2><span class="badge">${job.category}</span>
+            <div><strong>💰 Precio:</strong> ${escapeHtml(job.price || "A convenir")}</div><div><strong>📍 Ubicación:</strong> ${escapeHtml(job.location)}</div>
+            <p><strong>📝 Descripción:</strong> ${escapeHtml(job.fullDesc)}</p>
+            <div class="detail-contact" style="background:#f1f5f9; padding:0.8rem; border-radius:20px;">${contactHtml}</div>
+            ${job.phone ? `<a href="${waUrl}" target="_blank" class="wa-btn" style="display:flex; justify-content:center; gap:8px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Contactar por WhatsApp</a>` : ''}
+            </div>`;
+        setActiveView("detail");
+    }
+
+    function publishNewJob(e){
+        e.preventDefault();
+        const title = document.getElementById("pubTitle").value.trim();
+        const category = document.getElementById("pubCategory").value;
+        const desc = document.getElementById("pubDesc").value.trim();
+        const price = document.getElementById("pubPrice").value.trim() || "A convenir";
+        const location = document.getElementById("pubLocation").value.trim();
+        const phone = document.getElementById("pubPhone").value.trim();
+        const emailContact = document.getElementById("pubEmail").value.trim();
+        if(!title || !desc || !location){ alert("Completa título, descripción y ubicación"); return; }
+        if(!phone && !emailContact){ alert("Debes proporcionar al menos un teléfono o email de contacto"); return; }
+        const newJob = {
+            id: "job_"+Date.now(),
+            title, category, shortDesc: desc.substring(0,70)+(desc.length>70?"...":""), fullDesc: desc,
+            publisher: currentUser.name, publisherEmail: currentUser.email,
+            phone: phone || "", emailContact: emailContact || "", price, location,
+            date: Date.now()
+        };
+        JOBS_MOCK.unshift(newJob);
+        document.getElementById("publishForm").reset();
+        alert("¡Llamado publicado!");
+        setActiveView("feed");
+        renderFeed();
+    }
+
+    function renderProfile(){
+        if(!currentUser) return;
+        const avg = getAvgStars(currentUser.reviews);
+        let tagsHtml = (currentUser.tags || []).map(t=> `<span class="tag">${escapeHtml(t)}</span>`).join('');
+        let reviewsHtml = currentUser.reviews.map(r=> `<div class="review-item"><strong>${escapeHtml(r.author)}</strong> ${renderStars(r.stars)}<p>${escapeHtml(r.comment)}</p></div>`).join('');
+        let historyHtml = currentUser.history.map(h=> `<div class="history-item">✔️ ${escapeHtml(h)}</div>`).join('');
+        document.getElementById("profileContent").innerHTML = `
+            <div class="profile-header" style="display:flex; gap:1rem; align-items:center;"><div class="avatar" style="background:#2c7da0; width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem;">${currentUser.avatarIcon || "👤"}</div><div><h2>${escapeHtml(currentUser.name)}</h2>${renderStars(avg)} (${currentUser.reviews.length} reseñas)</div></div>
+            <p><strong>📄 Sobre mí:</strong> ${escapeHtml(currentUser.description)}</p>
+            <div><strong>🏷️ Etiquetas de trabajo:</strong> ${tagsHtml || "Sin etiquetas"}</div>
+            <h4 style="margin-top:1rem;">📋 Historial de trabajos realizados</h4>${historyHtml || "<p>Sin historial</p>"}
+            <h4>⭐ Reseñas</h4>${reviewsHtml || "<p>Sin reseñas aún</p>"}
+        `;
+    }
+
+    // Editar perfil
+    function openEditModal(){
+        document.getElementById("editName").value = currentUser.name;
+        document.getElementById("editAvatar").value = currentUser.avatarIcon || "";
+        document.getElementById("editDesc").value = currentUser.description || "";
+        document.getElementById("editTags").value = (currentUser.tags || []).join(", ");
+        document.getElementById("editProfileModal").style.display = "flex";
+    }
+    function saveProfile(){
+        currentUser.name = document.getElementById("editName").value.trim() || currentUser.name;
+        currentUser.avatarIcon = document.getElementById("editAvatar").value.trim() || "👤";
+        currentUser.description = document.getElementById("editDesc").value.trim() || "";
+        let tagsStr = document.getElementById("editTags").value;
+        currentUser.tags = tagsStr.split(",").map(s=> s.trim()).filter(s=>s);
+        USERS_MOCK[currentUser.email] = currentUser;
+        renderProfile();
+        document.getElementById("editProfileModal").style.display = "none";
+        renderFeed(); // actualiza nombre en llamados publicados
+        JOBS_MOCK.forEach(job => { if(job.publisherEmail === currentUser.email) job.publisher = currentUser.name; });
+        renderFeed();
+        alert("Perfil actualizado");
+    }
+
+    // Cerrar sesión
+    function logout(){
+        currentUser = null;
+        document.getElementById("appMain").style.display = "none";
+        document.getElementById("authScreen").style.display = "block";
+        document.getElementById("authScreen").classList.add("active");
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("resetPasswordDiv").style.display = "none";
+    }
+
+    // Reset password simulado
+    function showResetPanel(){ document.getElementById("loginForm").style.display="none"; document.getElementById("registerForm").style.display="none"; document.getElementById("resetPasswordDiv").style.display="block"; }
+    function sendReset(){ let email = document.getElementById("resetEmail").value; if(email) alert(`Se envió un enlace de restablecimiento a ${email} (simulado)`); else alert("Ingresa un email"); document.getElementById("resetEmail").value=""; backToLogin(); }
+    function backToLogin(){ document.getElementById("resetPasswordDiv").style.display="none"; document.getElementById("loginForm").style.display="block"; document.getElementById("registerForm").style.display="none"; }
+
+    // Autenticación
+    function attemptLogin(email, pass){ let u = USERS_MOCK[email]; if(u && u.password === pass){ currentUser = {...u}; return true; } return false; }
+    function registerUser(email, pass){ if(USERS_MOCK[email]) return false; if(pass.length<4) return false; let newUser = { id:Date.now(), name:email.split('@')[0], email, password:pass, avatarIcon:"👤", description:"Nuevo profesional en Uruguay", tags:[], history:["Primer trabajo registrado"], reviews:[{author:"Bienvenida",comment:"Usuario nuevo en TrabajoUY",stars:5}] }; USERS_MOCK[email] = newUser; currentUser = {...newUser}; return true; }
+
+    function enterApp(){ document.getElementById("authScreen").style.display="none"; document.getElementById("appMain").style.display="block"; setActiveView("feed"); renderFeed(); renderProfile(); }
+
+    function setActiveView(view){ document.querySelectorAll('.view').forEach(v=> v.classList.remove('active')); if(view==='feed') document.getElementById("feedView").classList.add("active"); if(view==='detail') document.getElementById("detailView").classList.add("active"); if(view==='publish') document.getElementById("publishView").classList.add("active"); if(view==='profile') document.getElementById("profileView").classList.add("active"); document.querySelectorAll('.nav-item').forEach(nav=>{ let val = nav.getAttribute('data-nav'); if((val==='feed' && view==='feed')||(val==='publish' && view==='publish')||(val==='profile' && view==='profile')) nav.classList.add('active'); else nav.classList.remove('active'); }); }
+
+    function init(){
+        // poblar dropdowns
+        let catSelect = document.getElementById("filterCategory"); catSelect.innerHTML = '<option value="">Todas las categorías</option>'+CATEGORIES.map(c=>`<option>${c}</option>`).join('');
+        let pubCat = document.getElementById("pubCategory"); pubCat.innerHTML = CATEGORIES.map(c=>`<option>${c}</option>`).join('');
+        document.getElementById("filterOrder").addEventListener("change",()=>renderFeed());
+        document.getElementById("filterCategory").addEventListener("change",()=>renderFeed());
+        document.getElementById("searchLocation").addEventListener("input",()=>renderFeed());
+        document.getElementById("backToFeedBtn").addEventListener("click",()=>setActiveView("feed"));
+        document.getElementById("publishForm").addEventListener("submit",publishNewJob);
+        document.getElementById("editProfileBtn").addEventListener("click",openEditModal);
+        document.getElementById("saveProfileBtn").addEventListener("click",saveProfile);
+        document.getElementById("closeModalBtn").addEventListener("click",()=>document.getElementById("editProfileModal").style.display="none");
+        document.getElementById("logoutBtn").addEventListener("click",logout);
+        // auth
+        document.getElementById("doLoginBtn").addEventListener("click",()=>{ let email=document.getElementById("loginEmail").value.trim(); let pass=document.getElementById("loginPassword").value; if(attemptLogin(email,pass)) enterApp(); else alert("Credenciales inválidas. Prueba lucia@trabajouy.uy / 1234"); });
+        document.getElementById("doRegisterBtn").addEventListener("click",()=>{ let email=document.getElementById("regEmail").value.trim(); let pass=document.getElementById("regPassword").value; if(registerUser(email,pass)) enterApp(); else alert("Email ya existe o contraseña corta"); });
+        document.getElementById("showRegisterBtn").addEventListener("click",()=>{ document.getElementById("loginForm").style.display="none"; document.getElementById("registerForm").style.display="block"; document.getElementById("resetPasswordDiv").style.display="none"; });
+        document.getElementById("showLoginBtn").addEventListener("click",()=>{ document.getElementById("registerForm").style.display="none"; document.getElementById("loginForm").style.display="block"; document.getElementById("resetPasswordDiv").style.display="none"; });
+        document.getElementById("forgotPasswordBtn").addEventListener("click",showResetPanel);
+        document.getElementById("doResetBtn").addEventListener("click",sendReset);
+        document.getElementById("backToLoginFromReset").addEventListener("click",backToLogin);
+        document.querySelectorAll('.nav-item').forEach(item=> item.addEventListener('click',()=>{ setActiveView(item.getAttribute('data-nav')); if(item.getAttribute('data-nav')==='profile') renderProfile(); if(item.getAttribute('data-nav')==='feed') renderFeed(); }));
+        // Service worker y manifest embebido
+        if('serviceWorker' in navigator){
+            let swCode = `self.addEventListener('install',e=>self.skipWaiting()); self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));`;
+            let swBlob = new Blob([swCode],{type:'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+        }
+        let manifestObj = { name:"TrabajoUY", short_name:"TrabajoUY", start_url:".", display:"standalone", theme_color:"#0f2b3d", icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f2b3d'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white'%3ETU%3C/text%3E%3C/svg%3E", sizes:"192x192"}] };
+        let manifestLink = document.createElement('link'); manifestLink.rel='manifest'; manifestLink.href=URL.createObjectURL(new Blob([JSON.stringify(manifestObj)],{type:'application/json'})); document.head.appendChild(manifestLink);
+    }
+    init();
+</script>
+</body>
+</html>
