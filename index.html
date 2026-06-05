@@ -7,171 +7,55 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: system-ui, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            background: #eef2f5;
-            color: #1e2a3e;
-            padding-bottom: 70px;
-        }
-
-        .app-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            position: relative;
-        }
-
-        .header {
-            background: #0f2b3d;
-            color: white;
-            padding: 1.2rem 1rem;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 600;
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, 'Segoe UI', Roboto, sans-serif; background: #eef2f5; color: #1e2a3e; padding-bottom: 70px; }
+        .app-container { max-width: 600px; margin: 0 auto; background: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
+        .header { background: #0f2b3d; color: white; padding: 1.2rem 1rem; text-align: center; font-size: 1.5rem; font-weight: 600; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
         .header span { color: #4fc3f7; }
-
-        .view {
-            padding: 1rem;
-            display: none;
-            animation: fade 0.2s ease;
-        }
+        .view { padding: 1rem; display: none; animation: fade 0.2s ease; }
         .view.active { display: block; }
-        @keyframes fade {
-            from { opacity: 0; transform: translateY(5px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-
-        /* Tarjetas */
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s;
-        }
-        .badge {
-            background: #e1f5fe;
-            color: #0277bd;
-            padding: 0.2rem 0.7rem;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            display: inline-block;
-            margin: 0.4rem 0;
-        }
-        .price-tag {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border-radius: 20px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-        .btn-outline, .btn-primary {
-            background: none;
-            border: 1px solid #2c7da0;
-            padding: 0.4rem 1rem;
-            border-radius: 40px;
-            color: #2c7da0;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: #2c7da0;
-            color: white;
-            border: none;
-            justify-content: center;
-        }
-        .btn-sm {
-            font-size: 0.75rem;
-            padding: 0.3rem 0.8rem;
-        }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(255,255,255,0.96);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0.6rem 1rem 1rem;
-            border-top: 1px solid #e2e8f0;
-            z-index: 100;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: #8a9bb5;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
+        @keyframes fade { from { opacity: 0; transform: translateY(5px);} to { opacity: 1; transform: translateY(0);} }
+        .card { background: white; border-radius: 20px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .badge { background: #e1f5fe; color: #0277bd; padding: 0.2rem 0.7rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 0.4rem 0; }
+        .price-tag { background: #e8f5e9; color: #2e7d32; border-radius: 20px; padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: bold; }
+        .btn-outline, .btn-primary { background: none; border: 1px solid #2c7da0; padding: 0.4rem 1rem; border-radius: 40px; color: #2c7da0; font-weight: 500; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #2c7da0; color: white; border: none; justify-content: center; }
+        .btn-sm { font-size: 0.75rem; padding: 0.3rem 0.8rem; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 600px; margin: 0 auto; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; padding: 0.6rem 1rem 1rem; border-top: 1px solid #e2e8f0; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8a9bb5; font-size: 0.7rem; cursor: pointer; }
         .nav-item i { font-size: 1.5rem; }
         .nav-item.active { color: #1f6392; font-weight: 500; }
-
-        /* Formularios */
         .form-group { margin-bottom: 1rem; }
         label { font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 16px;
-            font-family: inherit;
-        }
-        .filter-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-        .filter-bar select, .filter-bar input {
-            flex: 1;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-        }
-        .tag {
-            background: #eef2ff;
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            margin: 4px 4px 0 0;
-        }
-        .logout-btn {
-            background: #f3f4f6;
-            border: none;
-            padding: 8px;
-            border-radius: 40px;
-            width: 100%;
-            margin-top: 1rem;
-            color: #b91c1c;
-            font-weight: 500;
-        }
+        input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 16px; font-family: inherit; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+        .filter-bar select, .filter-bar input { flex: 1; padding: 0.5rem; font-size: 0.8rem; }
+        .tag { background: #eef2ff; display: inline-block; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; margin: 4px 4px 0 0; }
+        .logout-btn { background: #f3f4f6; border: none; padding: 8px; border-radius: 40px; width: 100%; margin-top: 1rem; color: #b91c1c; font-weight: 500; }
         .wa-btn { background: #25D366; color: white; width: 100%; padding: 12px; border-radius: 40px; border: none; margin-top: 0.5rem; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        /* Botón de instalación flotante */
+        .install-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #0f2b3d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 200;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        .install-btn:hover { transform: scale(1.02); }
+        @media (max-width: 600px) { .install-btn { bottom: 75px; right: 16px; } }
     </style>
 </head>
 <body>
@@ -221,7 +105,7 @@
             <button id="editProfileBtn" class="btn-primary btn-sm" style="margin-top:1rem; width:100%; background:#475569;">✏️ Editar perfil</button>
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
         </div>
-        <!-- Modal edición perfil simple -->
+        <!-- Modal edición perfil -->
         <div id="editProfileModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center;">
             <div style="background:white; max-width:90%; width:400px; margin:auto; border-radius:28px; padding:1.5rem;">
                 <h3>Editar perfil</h3>
@@ -236,6 +120,9 @@
         <div class="bottom-nav"><div class="nav-item" data-nav="feed"><i class="fas fa-home"></i><span>Inicio</span></div><div class="nav-item" data-nav="publish"><i class="fas fa-plus-circle"></i><span>Publicar</span></div><div class="nav-item" data-nav="profile"><i class="fas fa-user"></i><span>Perfil</span></div></div>
     </div>
 </div>
+
+<!-- Botón flotante de instalación PWA -->
+<button id="installPwaBtn" class="install-btn"><i class="fas fa-download"></i> Instalar App</button>
 
 <script>
     // ---------- DATOS INICIALES ----------
@@ -344,7 +231,6 @@
         `;
     }
 
-    // Editar perfil
     function openEditModal(){
         document.getElementById("editName").value = currentUser.name;
         document.getElementById("editAvatar").value = currentUser.avatarIcon || "";
@@ -367,7 +253,6 @@
         alert("Perfil actualizado");
     }
 
-    // Cerrar sesión
     function logout(){
         currentUser = null;
         document.getElementById("appMain").style.display = "none";
@@ -378,12 +263,10 @@
         document.getElementById("resetPasswordDiv").style.display = "none";
     }
 
-    // Reset password simulado
     function showResetPanel(){ document.getElementById("loginForm").style.display="none"; document.getElementById("registerForm").style.display="none"; document.getElementById("resetPasswordDiv").style.display="block"; }
     function sendReset(){ let email = document.getElementById("resetEmail").value; if(email) alert(`Se envió un enlace de restablecimiento a ${email} (simulado)`); else alert("Ingresa un email"); document.getElementById("resetEmail").value=""; backToLogin(); }
     function backToLogin(){ document.getElementById("resetPasswordDiv").style.display="none"; document.getElementById("loginForm").style.display="block"; document.getElementById("registerForm").style.display="none"; }
 
-    // Autenticación
     function attemptLogin(email, pass){ let u = USERS_MOCK[email]; if(u && u.password === pass){ currentUser = {...u}; return true; } return false; }
     function registerUser(email, pass){ if(USERS_MOCK[email]) return false; if(pass.length<4) return false; let newUser = { id:Date.now(), name:email.split('@')[0], email, password:pass, avatarIcon:"👤", description:"Nuevo profesional en Uruguay", tags:[], history:["Primer trabajo registrado"], reviews:[{author:"Bienvenida",comment:"Usuario nuevo en TrabajoUY",stars:5}] }; USERS_MOCK[email] = newUser; currentUser = {...newUser}; return true; }
 
@@ -391,6 +274,33 @@
 
     function setActiveView(view){ document.querySelectorAll('.view').forEach(v=> v.classList.remove('active')); if(view==='feed') document.getElementById("feedView").classList.add("active"); if(view==='detail') document.getElementById("detailView").classList.add("active"); if(view==='publish') document.getElementById("publishView").classList.add("active"); if(view==='profile') document.getElementById("profileView").classList.add("active"); document.querySelectorAll('.nav-item').forEach(nav=>{ let val = nav.getAttribute('data-nav'); if((val==='feed' && view==='feed')||(val==='publish' && view==='publish')||(val==='profile' && view==='profile')) nav.classList.add('active'); else nav.classList.remove('active'); }); }
 
+    // ---------- PWA INSTALACIÓN CON BOTÓN ----------
+    let deferredPrompt;
+    const installBtn = document.getElementById('installPwaBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'flex'; // mostrar botón
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('Usuario instaló la PWA');
+            installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA instalada exitosamente');
+        installBtn.style.display = 'none';
+    });
+
+    // Inicialización y service worker mejorado con caché
     function init(){
         // poblar dropdowns
         let catSelect = document.getElementById("filterCategory"); catSelect.innerHTML = '<option value="">Todas las categorías</option>'+CATEGORIES.map(c=>`<option>${c}</option>`).join('');
@@ -413,13 +323,29 @@
         document.getElementById("doResetBtn").addEventListener("click",sendReset);
         document.getElementById("backToLoginFromReset").addEventListener("click",backToLogin);
         document.querySelectorAll('.nav-item').forEach(item=> item.addEventListener('click',()=>{ setActiveView(item.getAttribute('data-nav')); if(item.getAttribute('data-nav')==='profile') renderProfile(); if(item.getAttribute('data-nav')==='feed') renderFeed(); }));
-        // Service worker y manifest embebido
+        
+        // Service worker con caché básico para que funcione offline parcialmente
         if('serviceWorker' in navigator){
-            let swCode = `self.addEventListener('install',e=>self.skipWaiting()); self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));`;
-            let swBlob = new Blob([swCode],{type:'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+            const CACHE_NAME = 'trabajouy-v1';
+            const urlsToCache = [ window.location.href, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' ];
+            const swCode = `
+                const CACHE_NAME = '${CACHE_NAME}';
+                const urlsToCache = ${JSON.stringify(urlsToCache)};
+                self.addEventListener('install', event => {
+                    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+                    self.skipWaiting();
+                });
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request).then(response => response || fetch(event.request))
+                    );
+                });
+            `;
+            const swBlob = new Blob([swCode], {type:'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).then(reg => console.log("SW registrado")).catch(err => console.log("SW error", err));
         }
-        let manifestObj = { name:"TrabajoUY", short_name:"TrabajoUY", start_url:".", display:"standalone", theme_color:"#0f2b3d", icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f2b3d'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white'%3ETU%3C/text%3E%3C/svg%3E", sizes:"192x192"}] };
+        // Manifest embebido
+        let manifestObj = { name:"TrabajoUY", short_name:"TrabajoUY", start_url:".", display:"standalone", theme_color:"#0f2b3d", background_color:"#ffffff", icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f2b3d'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white'%3ETU%3C/text%3E%3C/svg%3E", sizes:"192x192", type:"image/svg+xml"}] };
         let manifestLink = document.createElement('link'); manifestLink.rel='manifest'; manifestLink.href=URL.createObjectURL(new Blob([JSON.stringify(manifestObj)],{type:'application/json'})); document.head.appendChild(manifestLink);
     }
     init();
