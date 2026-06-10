@@ -673,9 +673,17 @@ async function fetchSheetData() {
   const text = await resp.text();
   const json = JSON.parse(text.slice(47, -2));
   
-  // rows es un array de arrays: cada sub-array es una fila de la hoja
+  // Convertir todas las celdas a string, manejando números y otros tipos
   const rows = json.table.rows.map(row =>
-    row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v).trim() : '')
+    row.c.map(cell => {
+      if (cell === null || cell === undefined) return '';
+      if (cell.v === null || cell.v === undefined) return '';
+      // Si es número, convertirlo a string (manteniendo el número como texto)
+      if (typeof cell.v === 'number') {
+        return cell.v.toString();
+      }
+      return String(cell.v).trim();
+    })
   );
   return rows;
 }
@@ -702,9 +710,9 @@ function buildCharacters(rows) {
   const characters = [];
   for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
     const row = rows[rowIdx];
-    if (!row || row.length === 0) continue;
+    if (!row) continue;
     
-    // Saltar filas completamente vacías
+    // Verificar si la fila está completamente vacía
     let allEmpty = true;
     for (let i = 0; i < row.length; i++) {
       const cell = row[i];
@@ -721,19 +729,20 @@ function buildCharacters(rows) {
       let value = row[colIdx];
       if (value === undefined || value === null) {
         value = '';
+      } else if (typeof value === 'number') {
+        // Los números se convierten a string sin perder información
+        value = value.toString();
       } else {
-        value = String(value).trim(); // Convertir número a string sin problema
+        value = String(value).trim();
       }
       charObj[key] = value;
     }
     
-    if (charObj.nombre && charObj.nombre !== '') {
+    // Solo agregar si tiene nombre
+    if (charObj.nombre && charObj.nombre.trim() !== '') {
       characters.push(charObj);
-    } else {
-      console.warn('Fila sin nombre, omitida:', row);
     }
   }
-  console.log('Personajes cargados:', characters.map(c => c.nombre));
   return characters;
 }
 
