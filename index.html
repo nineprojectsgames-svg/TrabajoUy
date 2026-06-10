@@ -470,6 +470,128 @@
   display: block;
 }
 
+/* ----- TIER LIST ----- */
+#tierlist-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.tier-mode-selector {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.tier-mode-selector button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 1.2rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.tier-mode-selector button.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.tier-row {
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.tier-header {
+  background: var(--surface2);
+  padding: 0.6rem 1rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border);
+}
+.tier-header .tier-name {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+}
+.tier-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 1rem;
+  min-height: 120px;
+}
+.tier-card {
+  width: 100px;
+  background: var(--surface2);
+  border-radius: 8px;
+  text-align: center;
+  padding: 0.5rem;
+  cursor: grab;
+  transition: transform 0.1s, box-shadow 0.2s;
+  border: 1px solid var(--border);
+}
+.tier-card:active {
+  cursor: grabbing;
+}
+.tier-card.dragging {
+  opacity: 0.5;
+}
+.tier-card img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  margin-bottom: 0.3rem;
+}
+.tier-card span {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.tier-card .avg-score {
+  font-size: 0.6rem;
+  color: var(--accent);
+}
+.custom-tier-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+.custom-tier-actions button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.reset-tier-btn {
+  background: rgba(255,62,94,0.2);
+  border-color: var(--red);
+  color: var(--red);
+}
+@media (max-width: 768px) {
+  .tier-card {
+    width: 80px;
+  }
+  .tier-card img {
+    width: 50px;
+    height: 50px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -477,6 +599,7 @@
   <div class="logo">ZZZ<span>WIKI</span></div>
   <div class="header-game">ZENLESS ZONE ZERO — BUILDS</div>
   <button id="menu-toggle" style="background:none; border:none; color:var(--accent); font-size:1.8rem; cursor:pointer; display:none;">☰</button>
+  <button id="toggle-tierlist-btn" style="background:var(--surface2); border:1px solid var(--border); color:var(--accent); padding:0.2rem 0.8rem; border-radius:4px; font-family:'Share Tech Mono'; font-size:0.7rem; cursor:pointer;">📊 TIER LIST</button>
   <div class="header-right">
     <input type="text" id="search-input" placeholder="Buscar personaje…" />
     <div class="status-dot loading" id="status-dot" title="Cargando datos…"></div>
@@ -491,18 +614,22 @@
 </aside>
 <div id="menu-overlay" class="menu-overlay"></div>
   <main id="main-content">
-    <div class="state-screen" id="loading-screen">
-      <div class="spinner"></div>
-      <h2>CARGANDO DATOS</h2>
-      <div>Conectando con la base de datos…</div>
-    </div>
-  </main>
+  <div id="wiki-container">
+    <!-- Aquí se cargará dinámicamente la wiki (lo que ya tenías) -->
+  </div>
+  <div id="tierlist-container" style="display: none;">
+    <!-- La tier list se generará con JS -->
+  </div>
+</main>
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════════
 // CONFIGURACIÓN - ESTRUCTURA HORIZONTAL (primera fila = claves)
 // ══════════════════════════════════════════════════════════
+const wikiContainer = document.getElementById('wiki-container');
+const tierListContainer = document.getElementById('tierlist-container');
+
 const SHEET_CONFIG = {
   sheetId: '1hvggH2H5F27AyvaQnZs9CAPu6V78TZBa2SKq445Jad8',
   sheetName: 'Zenless Builds',
@@ -969,6 +1096,254 @@ function setupSearch() {
   });
 }
 
+// ===================== TIER LIST =====================
+let currentTierMode = 'auto'; // 'auto' o 'custom'
+let customTiers = [];  // array de objetos: { name, characters: [charIndex] }
+
+// Obtener todas las clases (roles) únicas de personajes
+function getAllRoles() {
+  return [...new Set(allChars.map(c => c.rol).filter(r => r && r.trim() !== ''))];
+}
+
+// Generar tier list automática: agrupa por rol y rango de promedio
+function generateAutoTierList() {
+  const roles = getAllRoles();
+  const tiers = [
+    { min: 9, max: 10, name: 'S+ (9-10)' },
+    { min: 8, max: 8.99, name: 'S (8-9)' },
+    { min: 7, max: 7.99, name: 'A (7-8)' },
+    { min: 5, max: 6.99, name: 'B (5-7)' },
+    { min: 3, max: 4.99, name: 'C (3-5)' },
+    { min: 0, max: 2.99, name: 'D (0-3)' }
+  ];
+  
+  let html = `<div class="tier-mode-selector">
+    <button class="tier-auto-btn active">📊 Automática por promedio</button>
+    <button class="tier-custom-btn">🎮 Personalizada (arrastrable)</button>
+  </div>`;
+  
+  for (const rol of roles) {
+    html += `<div class="tier-rol-group" style="margin-bottom:2rem;">
+      <h3 style="color:var(--accent2); margin-bottom:0.5rem;">${rol}</h3>`;
+    for (const tier of tiers) {
+      const charsInTier = allChars.filter(c => {
+        const avg = parseFloat(calcPromedio(c));
+        return c.rol === rol && !isNaN(avg) && avg >= tier.min && avg <= tier.max;
+      });
+      if (charsInTier.length === 0) continue;
+      html += `<div class="tier-row">
+        <div class="tier-header">${tier.name}</div>
+        <div class="tier-cards">`;
+      for (const ch of charsInTier) {
+        const avg = calcPromedio(ch);
+        html += `<div class="tier-card" data-char-idx="${allChars.indexOf(ch)}">
+          <img src="${ch.imagen || ''}" alt="${ch.nombre}" onerror="this.style.display='none'">
+          <span>${ch.nombre}</span>
+          <span class="avg-score">${avg || '—'}</span>
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+  return html;
+}
+
+// Inicializar tier list personalizada (cargar desde localStorage o crear por defecto)
+function initCustomTiers() {
+  const saved = localStorage.getItem('zzz_custom_tiers');
+  if (saved) {
+    customTiers = JSON.parse(saved);
+  } else {
+    // Por defecto: crear filas S, A, B, C, D con personajes ordenados por promedio
+    const sorted = [...allChars].sort((a,b) => parseFloat(calcPromedio(b)) - parseFloat(calcPromedio(a)));
+    const tiersDefault = [
+      { name: 'S (9-10)', characters: [] },
+      { name: 'A (7-9)', characters: [] },
+      { name: 'B (5-7)', characters: [] },
+      { name: 'C (3-5)', characters: [] },
+      { name: 'D (0-3)', characters: [] },
+    ];
+    for (const ch of sorted) {
+      const avg = parseFloat(calcPromedio(ch));
+      let tierIdx = 0;
+      if (avg >= 9) tierIdx = 0;
+      else if (avg >= 7) tierIdx = 1;
+      else if (avg >= 5) tierIdx = 2;
+      else if (avg >= 3) tierIdx = 3;
+      else tierIdx = 4;
+      tiersDefault[tierIdx].characters.push(allChars.indexOf(ch));
+    }
+    customTiers = tiersDefault;
+  }
+}
+
+// Guardar tier list personalizada en localStorage
+function saveCustomTiers() {
+  localStorage.setItem('zzz_custom_tiers', JSON.stringify(customTiers));
+}
+
+// Renderizar la tier list personalizada (drag & drop)
+function renderCustomTierList() {
+  let html = `<div class="tier-mode-selector">
+    <button class="tier-auto-btn">📊 Automática por promedio</button>
+    <button class="tier-custom-btn active">🎮 Personalizada (arrastrable)</button>
+  </div>
+  <div id="custom-tier-container">`;
+  
+  customTiers.forEach((tier, idx) => {
+    html += `<div class="tier-row" data-tier-index="${idx}">
+      <div class="tier-header">
+        <input type="text" class="tier-name-input" value="${tier.name}" style="background:var(--surface2); border:1px solid var(--border); color:var(--text-bright); padding:0.2rem 0.5rem; border-radius:4px; width:120px;">
+        <button class="remove-tier-btn" data-tier="${idx}" style="background:none; border:none; color:var(--red); cursor:pointer;">✕</button>
+      </div>
+      <div class="tier-cards" data-tier="${idx}" data-dropzone="true">
+  `;
+    for (const charIdx of tier.characters) {
+      const ch = allChars[charIdx];
+      if (!ch) continue;
+      const avg = calcPromedio(ch);
+      html += `<div class="tier-card" draggable="true" data-char-idx="${charIdx}" data-origin-tier="${idx}">
+        <img src="${ch.imagen || ''}" alt="${ch.nombre}" onerror="this.style.display='none'">
+        <span>${ch.nombre}</span>
+        <span class="avg-score">${avg || '—'}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  });
+  
+  html += `<div class="custom-tier-actions">
+    <button id="add-tier-btn">➕ Añadir fila</button>
+    <button id="reset-custom-tier" class="reset-tier-btn">⟳ Restablecer por promedio</button>
+  </div></div>`;
+  
+  document.getElementById('tierlist-container').innerHTML = html;
+  
+  // Adjuntar eventos de drag & drop
+  attachDragAndDropEvents();
+  // Eventos para botones de eliminar fila, añadir fila, reset
+  document.querySelectorAll('.remove-tier-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tierIdx = parseInt(btn.dataset.tier);
+      if (customTiers.length > 1) {
+        // Mover personajes de la fila eliminada a la fila superior (si existe) o inferior
+        const charsToMove = customTiers[tierIdx].characters;
+        customTiers.splice(tierIdx, 1);
+        if (customTiers.length > 0) {
+          const targetIdx = Math.min(tierIdx, customTiers.length-1);
+          customTiers[targetIdx].characters.push(...charsToMove);
+        }
+        saveCustomTiers();
+        renderCustomTierList();
+      }
+    });
+  });
+  document.getElementById('add-tier-btn')?.addEventListener('click', () => {
+    customTiers.push({ name: 'Nueva fila', characters: [] });
+    saveCustomTiers();
+    renderCustomTierList();
+  });
+  document.getElementById('reset-custom-tier')?.addEventListener('click', () => {
+    initCustomTiers(); // reinicia según promedios
+    saveCustomTiers();
+    renderCustomTierList();
+  });
+  // Eventos para renombrar fila
+  document.querySelectorAll('.tier-name-input').forEach((input, idx) => {
+    input.addEventListener('change', (e) => {
+      customTiers[idx].name = e.target.value;
+      saveCustomTiers();
+    });
+  });
+}
+
+// Funciones para drag & drop
+function attachDragAndDropEvents() {
+  const cards = document.querySelectorAll('.tier-card');
+  const dropZones = document.querySelectorAll('[data-dropzone="true"]');
+  
+  cards.forEach(card => {
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragend', handleDragEnd);
+    card.setAttribute('draggable', 'true');
+  });
+  dropZones.forEach(zone => {
+    zone.addEventListener('dragover', handleDragOver);
+    zone.addEventListener('drop', handleDrop);
+  });
+}
+
+let draggedItem = null;
+let draggedCharIdx = null;
+let draggedOriginTier = null;
+
+function handleDragStart(e) {
+  draggedItem = this;
+  draggedCharIdx = parseInt(this.dataset.charIdx);
+  draggedOriginTier = parseInt(this.dataset.originTier);
+  e.dataTransfer.setData('text/plain', draggedCharIdx);
+  this.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+  if (draggedItem) draggedItem.classList.remove('dragging');
+  draggedItem = null;
+  draggedCharIdx = null;
+  draggedOriginTier = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const targetZone = e.currentTarget;
+  const targetTierIdx = parseInt(targetZone.dataset.tier);
+  if (isNaN(targetTierIdx)) return;
+  if (draggedCharIdx === null || draggedOriginTier === null) return;
+  
+  // Mover personaje de origen a destino
+  const originTier = customTiers[draggedOriginTier];
+  const charIndexInOrigin = originTier.characters.indexOf(draggedCharIdx);
+  if (charIndexInOrigin !== -1) originTier.characters.splice(charIndexInOrigin, 1);
+  customTiers[targetTierIdx].characters.push(draggedCharIdx);
+  
+  saveCustomTiers();
+  renderCustomTierList();
+}
+
+// Mostrar/ocultar tier list y wiki
+function showWiki() {
+  document.getElementById('wiki-container').style.display = 'block';
+  document.getElementById('tierlist-container').style.display = 'none';
+}
+function showTierList() {
+  document.getElementById('wiki-container').style.display = 'none';
+  document.getElementById('tierlist-container').style.display = 'block';
+  // Generar según el modo actual
+  if (currentTierMode === 'auto') {
+    document.getElementById('tierlist-container').innerHTML = generateAutoTierList();
+  } else {
+    initCustomTiers();
+    renderCustomTierList();
+  }
+  // Re-enganchar eventos de cambio de modo
+  document.querySelectorAll('.tier-auto-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentTierMode = 'auto';
+      showTierList();
+    });
+  });
+  document.querySelectorAll('.tier-custom-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentTierMode = 'custom';
+      showTierList();
+    });
+  });
+}
+
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
@@ -982,6 +1357,18 @@ async function init() {
       renderError('No se encontraron personajes. Asegúrate de que la primera fila tenga los encabezados.');
       return;
     }
+// Configurar botón de toggle
+const toggleBtn = document.getElementById('toggle-tierlist-btn');
+toggleBtn.addEventListener('click', () => {
+  if (document.getElementById('tierlist-container').style.display === 'none') {
+    showTierList();
+    toggleBtn.textContent = '📖 WIKI';
+  } else {
+    showWiki();
+    toggleBtn.textContent = '📊 TIER LIST';
+  }
+});
+showWiki(); // por defecto mostrar wiki
     renderFilters();      // Generar los filtros dinámicos
     renderSidebar(allChars);
     renderWelcome(allChars);
