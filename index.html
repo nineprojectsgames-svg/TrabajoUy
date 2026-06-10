@@ -85,6 +85,7 @@
   .char-avatar { width: 88px; height: 88px; border-radius: 4px; object-fit: cover; border: 2px solid var(--accent); background: var(--surface2); flex-shrink: 0; box-shadow: 0 0 20px rgba(245,196,0,.2); }
   .char-info { flex: 1; }
   .char-name { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: .08em; color: var(--text-bright); text-shadow: 0 0 30px rgba(245,196,0,.15); line-height: 1; margin-bottom: .4rem; }
+  <div class="char-emojis" style="margin-top: 0.5rem;">${renderEmojis(c.resumen)}</div>
   .char-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .8rem; }
   .tag { font-family: 'Share Tech Mono', monospace; font-size: .68rem; padding: .15rem .5rem; border-radius: 2px; letter-spacing: .06em; }
   .tag-faction  { background: rgba(0,212,255,.1); border: 1px solid rgba(0,212,255,.3); color: var(--accent3); }
@@ -216,6 +217,21 @@
     font-size: 0.6rem;
   }
 }
+
+.emoji-badge {
+  display: inline-block;
+  font-size: 1.1rem;
+  transition: transform 0.1s;
+}
+.emoji-badge:hover {
+  transform: scale(1.15);
+}
+@media (max-width: 768px) {
+  .emoji-badge {
+    font-size: 0.9rem;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -257,7 +273,8 @@ const EXPECTED_KEYS = [
   'sc_gameplay', 'sc_f2p_friendly', 'sc_consistencia',
   'nec_arma', 'nec_dupes', 'mejores_dupes', 'mejores_compas', 'mejor_bangbu',
   'w_engines', 'sets_discos', 'disco_slot4', 'disco_slot5', 'disco_slot6',
-  'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos'
+  'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos',
+  'resumen'     // <-- NUEVO
 ];
 
 const SCORE_LABELS = {
@@ -271,6 +288,34 @@ const SCORE_LABELS = {
 };
 
 const NEC_LEVELS = ['Nada', 'Poca', 'Media', 'Mucha', 'Obligatoria'];
+
+const EMOJI_DESCRIPTIONS = {
+  '💔': 'Reduce defensas / resistencias del enemigo',
+  '📈': 'Amplifica el daño de todo el equipo',
+  '💉': 'Cura a los aliados',
+  '🛡️': 'Otorga escudos a los aliados',
+  '⛓️': 'Habilita o potencia ataques en cadena',
+  '✨': 'Permite usar ultimates adicionales',
+  '🎯': 'Otorga daño extra',
+  '⚡': 'Otorga regeneración de energía extra',
+  '🌀': 'Ataca sin estar en el campo activo',
+  '🌸': 'Actúa reacciones de Bloom',
+  '🌪️': 'Actúa reacciones de Disorder',
+  '💥': 'Actúa reacciones de Totalize',
+  '💀': 'Alto daño con su Ultimate',
+  '🔗': 'Alto daño en ataques en cadena',
+  '⚙️': 'Alto daño con habilidad EX',
+  '🗡️': 'Alto daño con ataques básicos, cargados o rápidos',
+  '⏳': 'Requiere mucho tiempo activo en campo',
+  '🔁': 'Cambia rápido, poco tiempo en campo',
+  '🪞': 'Puede hacer parrys / contraataques',
+  '⚔️': 'Escala con ATAQUE',
+  '❤️': 'Escala con VIDA máxima',
+  '🔰': 'Escala con DEFENSA',
+  '🌡️': 'Escala con Maestría de Anomalía',
+  '🎲': 'Escala con Probabilidad de Anomalía',
+  '🔋': 'Escala con Recuperación de Energía'
+};
 
 // ══════════════════════════════════════════════════════════
 // FETCH DATOS (usando CSV para evitar problemas de tipos)
@@ -364,6 +409,16 @@ function splitPipe(str) {
   return str.split('|').map(s => s.trim()).filter(Boolean);
 }
 
+function renderEmojis(str) {
+  if (!str) return '';
+  // Dividir por espacios, pero respetando emojis que no tienen espacio (normalmente van separados por espacio)
+  const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
+  return emojis.map(emoji => {
+    const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
+    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.2rem; margin-right:0.2rem;">${emoji}</span>`;
+  }).join('');
+}
+
 // ══════════════════════════════════════════════════════════
 // RENDER
 // ══════════════════════════════════════════════════════════
@@ -379,7 +434,7 @@ function renderSidebar(chars) {
     item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
     item.innerHTML = `
       <img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'">
-      <span>${c.nombre}</span>
+      <span>${c.nombre} ${renderEmojis(c.resumen)}</span>
       ${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}
     `;
     item.addEventListener('click', () => selectChar(i));
