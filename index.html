@@ -151,70 +151,139 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-  @media (max-width: 768px) {
+ @media (max-width: 768px) {
+  /* ===== MENÚ HAMBURGUESA ===== */
   .sidebar {
     position: fixed;
     top: 60px;
-    left: -260px;
-    width: 260px;
+    left: -280px;
+    width: 280px;
     height: calc(100vh - 60px);
     background: var(--surface);
-    transition: left 0.3s ease;
     z-index: 1000;
+    transition: left 0.3s ease;
     border-right: 1px solid var(--border);
+    box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+    overflow-y: auto;
   }
   .sidebar.open {
     left: 0;
   }
+  /* Botón hamburguesa (si no existe, lo agregamos) */
   #menu-toggle {
     display: block !important;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    margin-left: 0.5rem;
   }
+  /* Overlay para cerrar al tocar fuera */
+  .menu-overlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    display: none;
+  }
+  .menu-overlay.active {
+    display: block;
+  }
+
+  /* ===== AJUSTES GENERALES ===== */
   main {
-    padding: 1rem;
+    padding: 0.8rem;
     width: 100%;
   }
   .grid-2, .grid-3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem;
   }
-  .span-2 {
-    grid-column: span 1;
+  .char-card {
+    margin: 0;
   }
   .char-header {
     flex-direction: column;
     align-items: center;
     text-align: center;
-  }
-  .char-name {
-    font-size: 1.5rem;
-  }
-  .char-score-big {
-    font-size: 2rem;
+    padding: 1rem;
   }
   .char-avatar {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
+  }
+  .char-name {
+    font-size: 1.6rem;
+  }
+  .char-score-big {
+    font-size: 2.2rem;
+    margin-top: 0.5rem;
+  }
+  .char-tags {
+    justify-content: center;
+  }
+  .panel {
+    padding: 0.8rem;
+  }
+  .rank-row {
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
   .rank-label {
-    width: 140px;
-    font-size: 0.7rem;
+    width: 100%;
+    font-size: 0.8rem;
   }
-  .rank-value {
-    font-size: 0.7rem;
+  .rank-bar-track {
+    width: 100%;
   }
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
   .stat-numbers {
     grid-template-columns: 1fr 1fr;
   }
+  .weapon-chain {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .weapon-item {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: center;
   }
-  .panel-title {
-    font-size: 0.6rem;
+  .weapon-sep {
+    display: none;
   }
-  .tag {
-    font-size: 0.6rem;
+  .disk-set {
+    font-size: 0.8rem;
+  }
+  .emoji-badge {
+    font-size: 1.2rem;
+  }
+  .info-val {
+    font-size: 0.85rem;
+  }
+  .tip-item {
+    font-size: 0.8rem;
+  }
+  /* Elementos de la barra lateral más táctiles */
+  .char-nav-item {
+    padding: 0.8rem 1rem;
+    gap: 0.8rem;
+  }
+  .char-nav-item img {
+    width: 40px;
+    height: 40px;
+  }
+  .nav-rank-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
   }
 }
 
@@ -261,17 +330,18 @@
 <header>
   <div class="logo">ZZZ<span>WIKI</span></div>
   <div class="header-game">ZENLESS ZONE ZERO — BUILDS</div>
-  <button id="menu-toggle" style="background:none; border:none; color:var(--accent); font-size:1.6rem; cursor:pointer; display:none;">☰</button>
+  <button id="menu-toggle" style="background:none; border:none; color:var(--accent); font-size:1.8rem; cursor:pointer; display:none;">☰</button>
   <div class="header-right">
     <input type="text" id="search-input" placeholder="Buscar personaje…" />
     <div class="status-dot loading" id="status-dot" title="Cargando datos…"></div>
   </div>
 </header>
 <div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">Personajes</div>
-    <div id="char-nav"></div>
-  </aside>
+<aside class="sidebar">
+  <div class="sidebar-section">Personajes</div>
+  <div id="char-nav"></div>
+</aside>
+<div id="menu-overlay" class="menu-overlay"></div>
   <main id="main-content">
     <div class="state-screen" id="loading-screen">
       <div class="spinner"></div>
@@ -657,6 +727,46 @@ function getScoreClass(avg) {
   if (num < 8) return 'score-dorado';
   if (num < 9) return 'score-celeste';
   return 'score-multicolor';
+}
+
+// ===================== MENÚ MÓVIL =====================
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.querySelector('.sidebar');
+const overlay = document.getElementById('menu-overlay');
+
+function closeMenu() {
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function openMenu() {
+  if (sidebar) sidebar.classList.add('open');
+  if (overlay) overlay.classList.add('active');
+}
+
+if (menuToggle && sidebar && overlay) {
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (sidebar.classList.contains('open')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+  // Cerrar al hacer clic en el overlay
+  overlay.addEventListener('click', closeMenu);
+  // Cerrar al seleccionar un personaje (se dispara desde el evento click en los items)
+  document.getElementById('char-nav')?.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      closeMenu();
+    }
+  });
+  // Cerrar al redimensionar la ventana a escritorio
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      closeMenu();
+    }
+  });
 }
 
 </script>
