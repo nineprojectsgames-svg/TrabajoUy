@@ -681,22 +681,22 @@ async function fetchSheetData() {
 }
 
 function buildCharacters(rows) {
-  if (rows.length < 2) return []; // Necesitamos al menos la fila de encabezados y 1 dato
+  if (rows.length < 2) return [];
   
   const headers = rows[0]; // Primera fila: nombres de columnas
-  // Crear un mapa: índice de columna -> clave esperada
+  // Mapear índice de columna -> clave esperada (sin diferenciar mayúsculas)
   const colIndexToKey = {};
   for (let i = 0; i < headers.length; i++) {
-    const header = headers[i].toLowerCase().trim();
-    if (COLUMN_KEYS.includes(header)) {
+    const header = headers[i] ? headers[i].toLowerCase().trim() : '';
+    if (header && COLUMN_KEYS.includes(header)) {
       colIndexToKey[i] = header;
     }
   }
   
-  // Si no encontramos la columna 'nombre', error
+  // Verificar que exista la columna 'nombre'
   const nombreIndex = Object.keys(colIndexToKey).find(idx => colIndexToKey[idx] === 'nombre');
   if (nombreIndex === undefined) {
-    throw new Error('No se encontró una columna con el encabezado "nombre" en la primera fila. Asegurate de que la celda A1 contenga exactamente "nombre" (minúsculas).');
+    throw new Error('No se encontró una columna con el encabezado "nombre" en la primera fila.');
   }
   
   const characters = [];
@@ -704,13 +704,21 @@ function buildCharacters(rows) {
   for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
     const row = rows[rowIdx];
     if (!row || row.length === 0) continue;
+    
+    // Verificar si toda la fila está vacía (todos los elementos son string vacío)
+    const isRowEmpty = row.every(cell => !cell || cell.trim() === '');
+    if (isRowEmpty) continue;
+    
     const charObj = {};
     for (let colIdx in colIndexToKey) {
       const key = colIndexToKey[colIdx];
-      const value = row[colIdx] || '';
+      let value = row[colIdx] !== undefined ? row[colIdx] : '';
+      // Convertir a string y limpiar, pero conservar números como string
+      value = String(value).trim();
       charObj[key] = value;
     }
-    // Solo agregar si tiene nombre
+    
+    // Solo agregar si tiene un nombre no vacío
     if (charObj.nombre && charObj.nombre.trim() !== '') {
       characters.push(charObj);
     }
