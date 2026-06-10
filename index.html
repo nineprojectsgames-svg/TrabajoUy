@@ -85,7 +85,6 @@
   .char-avatar { width: 88px; height: 88px; border-radius: 4px; object-fit: cover; border: 2px solid var(--accent); background: var(--surface2); flex-shrink: 0; box-shadow: 0 0 20px rgba(245,196,0,.2); }
   .char-info { flex: 1; }
   .char-name { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: .08em; color: var(--text-bright); text-shadow: 0 0 30px rgba(245,196,0,.15); line-height: 1; margin-bottom: .4rem; }
-  <div class="char-emojis" style="margin-top: 0.5rem;">${renderEmojis(c.resumen)}</div>
   .char-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .8rem; }
   .tag { font-family: 'Share Tech Mono', monospace; font-size: .68rem; padding: .15rem .5rem; border-radius: 2px; letter-spacing: .06em; }
   .tag-faction  { background: rgba(0,212,255,.1); border: 1px solid rgba(0,212,255,.3); color: var(--accent3); }
@@ -930,26 +929,29 @@ function selectChar(idx) {
   renderSidebar(filtered);
   renderChar(allChars[idx]);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) closeMenu();
+if (window.innerWidth <= 768) {
+  const sidebarElem = document.querySelector('.sidebar');
+  if (sidebarElem && sidebarElem.classList.contains('open')) {
+    if (typeof closeMenu === 'function') closeMenu();
+  }
 }
 
 function renderChar(c) {
   const avg = calcPromedio(c);
-  const main = document.getElementById('main-content');
   // Generar filas de puntuaciones con tooltips
   const scoreRows = Object.entries(SCORE_LABELS).map(([key, label]) => {
     let val = parseFloat(c[key]);
     if (isNaN(val)) val = 0;
     const pct = (val / 10) * 100;
-const tooltip = SCORE_TOOLTIPS[key] || '';
-return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
-          <div class="rank-label">
-            ${label}
-            <span class="info-icon" data-tip="${tooltip.replace(/"/g, '&quot;')}">ⓘ</span>
-          </div>
-          <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
-          <div class="rank-value">${val > 0 ? val : '—'}</div>
-        </div>`;
+    const tooltip = SCORE_TOOLTIPS[key] || '';
+    return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
+              <div class="rank-label">
+                ${label}
+                <span class="info-icon" data-tip="${tooltip.replace(/"/g, '&quot;')}">ⓘ</span>
+              </div>
+              <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+              <div class="rank-value">${val > 0 ? val : '—'}</div>
+            </div>`;
   }).join('');
 
   const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
@@ -988,7 +990,7 @@ return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
 
   const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
 
-  main.innerHTML = `
+  wikiContainer.innerHTML = `
   <div class="char-card">
     <div class="char-header">
       <img class="char-avatar ${rarezaClass}" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
@@ -1042,13 +1044,11 @@ return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
 }
 
 function renderWelcome(chars) {
-  const main = document.getElementById('main-content');
-  main.innerHTML = `<div class="welcome"><div class="welcome-title">BIENVENIDO A <span>ZZZWIKI</span></div><div class="welcome-sub">Seleccioná un personaje en el panel izquierdo</div><div style="color:var(--text-dim);font-size:.8rem;margin-top:.5rem">${chars.length} personaje${chars.length!==1?'s':''} cargado${chars.length!==1?'s':''}</div></div>`;
+  wikiContainer.innerHTML = `<div class="welcome"><div class="welcome-title">BIENVENIDO A <span>ZZZWIKI</span></div><div class="welcome-sub">Seleccioná un personaje en el panel izquierdo</div><div style="color:var(--text-dim);font-size:.8rem;margin-top:.5rem">${chars.length} personaje${chars.length!==1?'s':''} cargado${chars.length!==1?'s':''}</div></div>`;
 }
 
 function renderError(msg) {
-  const main = document.getElementById('main-content');
-  main.innerHTML = `<div class="state-screen"><div class="big-icon">⚠</div><h2>ERROR AL CARGAR</h2><div>${msg}</div><div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">Verificá que la primera fila contenga los nombres de columna exactos (nombre, imagen, ...)</div></div>`;
+  wikiContainer.innerHTML = `<div class="state-screen"><div class="big-icon">⚠</div><h2>ERROR AL CARGAR</h2><div>${msg}</div><div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">Verificá que la primera fila contenga los nombres de columna exactos (nombre, imagen, ...)</div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1318,6 +1318,14 @@ function handleDrop(e) {
 function showWiki() {
   document.getElementById('wiki-container').style.display = 'block';
   document.getElementById('tierlist-container').style.display = 'none';
+  // Si hay un personaje activo, mostrarlo; si no, mostrar bienvenida
+  if (allChars.length > 0) {
+    if (activeIdx !== -1 && allChars[activeIdx]) {
+      renderChar(allChars[activeIdx]);
+    } else {
+      renderWelcome(allChars);
+    }
+  }
 }
 function showTierList() {
   document.getElementById('wiki-container').style.display = 'none';
