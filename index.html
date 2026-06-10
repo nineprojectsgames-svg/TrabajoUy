@@ -241,6 +241,20 @@
   box-shadow: 0 0 12px rgba(245, 196, 0, 0.6);
 }
 
+/* Colores para la puntuación promedio */
+.score-gris { color: #6c757d; text-shadow: none; }
+.score-verde { color: #28a745; text-shadow: 0 0 6px rgba(40,167,69,0.3); }
+.score-morado { color: #aa66ff; text-shadow: 0 0 6px rgba(170,102,255,0.3); }
+.score-dorado { color: #f5c400; text-shadow: 0 0 6px rgba(245,196,0,0.3); }
+.score-celeste { color: #00d4ff; text-shadow: 0 0 6px rgba(0,212,255,0.3); }
+.score-multicolor {
+  background: linear-gradient(90deg, #f5c400, #ff6b1a, #00d4ff, #aa66ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
 </style>
 </head>
 <body>
@@ -454,7 +468,7 @@ function renderSidebar(chars) {
     item.innerHTML = `
       <img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar rareza-${c.rareza ? c.rareza.toLowerCase() : ''}" onerror="this.style.display='none'">
       <span>${c.nombre}</span>
-      ${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}
+    ${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}
     `;
     item.addEventListener('click', () => selectChar(i));
     nav.appendChild(item);
@@ -522,7 +536,7 @@ function renderChar(c) {
   <div class="char-emojis" style="margin: 0.3rem 0;">${renderEmojis(c.resumen)}</div>
   <div class="char-tags">${tags}</div>
 </div>
-      ${avg ? `<div class="char-score-big">${avg}<div class="score-label">/ 10</div></div>` : ''}
+   ${avg ? `<div class="char-score-big ${getScoreClass(avg)}">${avg}<div class="score-label">/ 10</div></div>` : ''}
     </div>
     <div class="grid-2">
       <div class="panel"><div class="panel-title">Puntuaciones</div><div class="rank-list">${scoreRows}</div></div>
@@ -633,6 +647,18 @@ init();
       if (window.innerWidth <= 768) sidebar.classList.remove('open');
     });
   }
+
+function getScoreClass(avg) {
+  if (avg === null) return '';
+  const num = parseFloat(avg);
+  if (num < 3) return 'score-gris';
+  if (num < 5) return 'score-verde';
+  if (num < 7) return 'score-morado';
+  if (num < 8) return 'score-dorado';
+  if (num < 9) return 'score-celeste';
+  return 'score-multicolor';
+}
+
 </script>
 
 </body>
