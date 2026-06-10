@@ -616,12 +616,11 @@
 // ══════════════════════════════════════════════════════════
 const SHEET_CONFIG = {
   sheetId: '1hvggH2H5F27AyvaQnZs9CAPu6V78TZBa2SKq445Jad8',
-  sheetName: 'Zenless Builds',  // Asegurate que coincida con el nombre de la pestaña
+  sheetName: 'Zenless Builds',
 };
 
-// Lista de nombres de columnas esperados (EN EL MISMO ORDEN QUE EN TU PRIMERA FILA)
-// Puedes omitir algunos, pero al menos 'nombre' es obligatorio.
-const COLUMN_KEYS = [
+// Claves que esperamos encontrar en la columna A (una por fila)
+const EXPECTED_KEYS = [
   'nombre',
   'imagen',
   'faccion',
@@ -664,7 +663,7 @@ const SCORE_LABELS = {
 const NEC_LEVELS = ['Nada','Poca','Media','Mucha','Obligatoria'];
 
 // ══════════════════════════════════════════════════════════
-// FETCH + PARSE (estructura estándar: primera fila = columnas)
+// FETCH + PARSE (estructura VERTICAL)
 // ══════════════════════════════════════════════════════════
 async function fetchSheetData() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_CONFIG.sheetName)}&tq=select%20*`;
@@ -677,68 +676,63 @@ async function fetchSheetData() {
     row.c.map(cell => {
       if (cell === null || cell === undefined) return '';
       if (cell.v === null || cell.v === undefined) return '';
-      // Convertir TODO a string, incluyendo números y booleanos
       return String(cell.v).trim();
     })
   );
-  console.log('📊 Datos crudos de la hoja (primeras 3 filas):', rows.slice(0, 3));
   return rows;
 }
 
 function buildCharacters(rows) {
   if (rows.length < 2) return [];
   
-  const headers = rows[0];
-  console.log('📌 Encabezados encontrados:', headers);
+  // Buscar la fila que contiene la clave 'nombre' en la columna 0
+  let nombreRowIndex = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i][0] && rows[i][0].toLowerCase() === 'nombre') {
+      nombreRowIndex = i;
+      break;
+    }
+  }
+  if (nombreRowIndex === -1) {
+    throw new Error('No se encontró la fila con la clave "nombre" en la columna A.');
+  }
   
-  const colIndexToKey = {};
-  for (let i = 0; i < headers.length; i++) {
-    let header = headers[i];
-    if (!header) continue;
-    header = header.toLowerCase().trim();
-    if (COLUMN_KEYS.includes(header)) {
-      colIndexToKey[i] = header;
-      console.log(`✅ Columna ${i} (${headers[i]}) -> clave "${header}"`);
+  // Mapa clave -> fila
+  const keyToRowMap = {};
+  for (let i = nombreRowIndex; i < rows.length; i++) {
+    const key = rows[i][0] ? rows[i][0].toLowerCase().trim() : '';
+    if (key && EXPECTED_KEYS.includes(key)) {
+      keyToRowMap[key] = i;
     }
   }
   
-  const nombreIndex = Object.keys(colIndexToKey).find(idx => colIndexToKey[idx] === 'nombre');
-  if (nombreIndex === undefined) {
-    throw new Error('No se encontró la columna "nombre" en los encabezados. Revisa que la primera fila tenga exactamente "nombre" (minúsculas, sin espacios).');
+  // Determinar número de personajes (columnas desde 1 hasta el final)
+  let maxCols = 0;
+  for (let i = nombreRowIndex; i < rows.length; i++) {
+    if (rows[i].length > maxCols) maxCols = rows[i].length;
   }
-  console.log(`🔍 Columna del nombre: índice ${nombreIndex}`);
+  const numChars = maxCols - 1;
   
   const characters = [];
-  for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
-    const row = rows[rowIdx];
-    if (!row || row.length === 0) continue;
-    
-    // Saltar filas vacías
-    const hasData = row.some(cell => cell && cell.trim() !== '');
-    if (!hasData) continue;
-    
+  for (let col = 1; col <= numChars; col++) {
     const charObj = {};
-    for (let colIdx in colIndexToKey) {
-      const key = colIndexToKey[colIdx];
-      let value = row[colIdx] !== undefined ? row[colIdx] : '';
-      charObj[key] = value;
+    for (const key of EXPECTED_KEYS) {
+      const rowIdx = keyToRowMap[key];
+      if (rowIdx !== undefined && rows[rowIdx] && rows[rowIdx][col] !== undefined) {
+        charObj[key] = rows[rowIdx][col];
+      } else {
+        charObj[key] = '';
+      }
     }
-    
-    console.log(`👤 Fila ${rowIdx} -> Nombre: "${charObj.nombre}"`, charObj);
-    
     if (charObj.nombre && charObj.nombre.trim() !== '') {
       characters.push(charObj);
-    } else {
-      console.warn(`⚠️ Fila ${rowIdx} omitida porque el nombre está vacío o no se encontró.`);
     }
   }
-  
-  console.log(`🎯 Total personajes cargados: ${characters.length}`, characters.map(c => c.nombre));
   return characters;
 }
 
 // ══════════════════════════════════════════════════════════
-// UTILITIES (igual que antes)
+// UTILITIES
 // ══════════════════════════════════════════════════════════
 function calcPromedio(char) {
   let total = 0;
@@ -765,7 +759,7 @@ function splitPipe(str) {
 }
 
 // ══════════════════════════════════════════════════════════
-// RENDER (no cambia, solo usa los datos)
+// RENDER (sin cambios visuales)
 // ══════════════════════════════════════════════════════════
 let allChars = [];
 let activeIdx = -1;
@@ -798,7 +792,6 @@ function renderChar(c) {
   const avg = calcPromedio(c);
   const main = document.getElementById('main-content');
 
-  // Scores
   const scoreRows = Object.entries(SCORE_LABELS).map(([key, label]) => {
     const val = parseFloat(c[key]) || 0;
     const pct = (val / 10) * 100;
@@ -812,44 +805,32 @@ function renderChar(c) {
       </div>`;
   }).join('');
 
-  // W-Engines
   const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
   const engineHTML = engines.length
-    ? engines.map((e, i) => `
-        <span class="weapon-item ${i===0?'best':''}">${e}</span>
-        ${i < engines.length-1 ? '<span class="weapon-sep">›</span>' : ''}
-      `).join('')
+    ? engines.map((e, i) => `<span class="weapon-item ${i===0?'best':''}">${e}</span>${i < engines.length-1 ? '<span class="weapon-sep">›</span>' : ''}`).join('')
     : '<span class="empty-val">Sin datos</span>';
 
-  // Disk sets
   const sets = (c.sets_discos || '').split('>').map(s => s.trim()).filter(Boolean);
   const setsHTML = sets.length
     ? sets.map((s, i) => `<div class="disk-set"><span class="rank-num">${i+1}</span>${s}</div>`).join('')
     : '<span class="empty-val">Sin datos</span>';
 
-  // Compas
   const compas = splitPipe(c.mejores_compas);
   const compasHTML = compas.length
     ? compas.map(s => {
         const [name, ...rest] = s.split('-');
-        return `<div class="info-row">
-          <div class="info-val">${name.trim()}<span class="reason">${rest.join('-').trim()}</span></div>
-        </div>`;
+        return `<div class="info-row"><div class="info-val">${name.trim()}<span class="reason">${rest.join('-').trim()}</span></div></div>`;
       }).join('')
     : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
-  // Bangbu
   const bangbus = splitPipe(c.mejor_bangbu);
   const bangbuHTML = bangbus.length
     ? bangbus.map(s => {
         const [name, ...rest] = s.split('-');
-        return `<div class="info-row">
-          <div class="info-val">${name.trim()}<span class="reason">${rest.join('-').trim()}</span></div>
-        </div>`;
+        return `<div class="info-row"><div class="info-val">${name.trim()}<span class="reason">${rest.join('-').trim()}</span></div></div>`;
       }).join('')
     : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
-  // Dupes
   const dupes = splitPipe(c.mejores_dupes);
   const dupesHTML = dupes.length
     ? dupes.map(d => `<div class="dupe-item">${d}</div>`).join('')
@@ -860,10 +841,7 @@ function renderChar(c) {
     if (!items.length) return '<span class="empty-val">Sin datos</span>';
     return `<div class="stat-numbers">` + items.map(s => {
       const [k, v] = s.split(':');
-      return `<div class="stat-num-cell ${ideal?'ideal':''}">
-        <div class="sn-key">${(k||'').trim()}</div>
-        <div class="sn-val">${(v||'').trim()}</div>
-      </div>`;
+      return `<div class="stat-num-cell ${ideal?'ideal':''}"><div class="sn-key">${(k||'').trim()}</div><div class="sn-val">${(v||'').trim()}</div></div>`;
     }).join('') + '</div>';
   }
 
@@ -894,54 +872,23 @@ function renderChar(c) {
       </div>
       ${avg ? `<div class="char-score-big">${avg}<div class="score-label">/ 10</div></div>` : ''}
     </div>
-
     <div class="grid-2">
-      <div class="panel">
-        <div class="panel-title">Puntuaciones</div>
-        <div class="rank-list">${scoreRows}</div>
-      </div>
+      <div class="panel"><div class="panel-title">Puntuaciones</div><div class="rank-list">${scoreRows}</div></div>
       <div class="panel">
         <div class="panel-title">Necesidades</div>
-        <div class="info-row">
-          <div class="info-key">W-Engine (arma signature)</div>
-          <div class="info-val">
-            <span class="necessity ${necClass(c.nec_arma||'nada')}">${c.nec_arma||'—'}</span>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-key">Dupes / Copias</div>
-          <div class="info-val">
-            <span class="necessity ${necClass(c.nec_dupes||'nada')}">${c.nec_dupes||'—'}</span>
-          </div>
-        </div>
-        <br>
-        <div class="panel-title">Mejores Dupes</div>
-        ${dupesHTML}
+        <div class="info-row"><div class="info-key">W-Engine (arma signature)</div><div class="info-val"><span class="necessity ${necClass(c.nec_arma||'nada')}">${c.nec_arma||'—'}</span></div></div>
+        <div class="info-row"><div class="info-key">Dupes / Copias</div><div class="info-val"><span class="necessity ${necClass(c.nec_dupes||'nada')}">${c.nec_dupes||'—'}</span></div></div>
+        <br><div class="panel-title">Mejores Dupes</div>${dupesHTML}
       </div>
     </div>
-
     <div class="grid-2">
-      <div class="panel">
-        <div class="panel-title">Mejores Compañeros</div>
-        ${compasHTML}
-      </div>
-      <div class="panel">
-        <div class="panel-title">Mejor Bangbú</div>
-        ${bangbuHTML}
-      </div>
+      <div class="panel"><div class="panel-title">Mejores Compañeros</div>${compasHTML}</div>
+      <div class="panel"><div class="panel-title">Mejor Bangbú</div>${bangbuHTML}</div>
     </div>
-
     <div class="grid-2">
-      <div class="panel">
-        <div class="panel-title">W-Engines</div>
-        <div class="weapon-chain">${engineHTML}</div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Sets de Discos</div>
-        ${setsHTML}
-      </div>
+      <div class="panel"><div class="panel-title">W-Engines</div><div class="weapon-chain">${engineHTML}</div></div>
+      <div class="panel"><div class="panel-title">Sets de Discos</div>${setsHTML}</div>
     </div>
-
     <div class="panel" style="margin-bottom:1.2rem">
       <div class="panel-title">Stats de Discos</div>
       <div class="stats-grid">
@@ -951,12 +898,10 @@ function renderChar(c) {
       </div>
       ${subsHTML ? `<div style="margin-top:.75rem"><div class="info-key" style="margin-bottom:.3rem">SUBSTATS PRIORITARIAS</div>${subsHTML}</div>` : ''}
     </div>
-
     <div class="grid-2">
       <div class="panel"><div class="panel-title">Stats Básicas</div>${renderStats(c.stats_basicas, false)}</div>
       <div class="panel"><div class="panel-title">Stats Ideales</div>${renderStats(c.stats_ideales, true)}</div>
     </div>
-
     <div class="panel" style="margin-bottom:2rem"><div class="panel-title">Consejos &amp; Habilidades</div>${tipsHTML}</div>
   </div>`;
 
@@ -975,24 +920,13 @@ function renderWelcome(chars) {
     <div class="welcome">
       <div class="welcome-title">BIENVENIDO A <span>ZZZWIKI</span></div>
       <div class="welcome-sub">Seleccioná un personaje en el panel izquierdo</div>
-      <div style="color:var(--text-dim);font-size:.8rem;margin-top:.5rem">
-        ${chars.length} personaje${chars.length!==1?'s':''} cargado${chars.length!==1?'s':''}
-      </div>
+      <div style="color:var(--text-dim);font-size:.8rem;margin-top:.5rem">${chars.length} personaje${chars.length!==1?'s':''} cargado${chars.length!==1?'s':''}</div>
     </div>`;
 }
 
 function renderError(msg) {
   const main = document.getElementById('main-content');
-  main.innerHTML = `
-    <div class="state-screen">
-      <div class="big-icon">⚠</div>
-      <h2>ERROR AL CARGAR</h2>
-      <div>${msg}</div>
-      <div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">
-        Verificá que el sheet esté publicado (Archivo > Compartir > Cualquier persona con el enlace puede ver) <br>
-        y que la primera fila contenga exactamente los nombres de columna: <strong>nombre, imagen, faccion, elemento, rol, rareza, ...</strong>
-      </div>
-    </div>`;
+  main.innerHTML = `<div class="state-screen"><div class="big-icon">⚠</div><h2>ERROR AL CARGAR</h2><div>${msg}</div><div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">Verificá que la columna A contenga exactamente las claves: <strong>nombre, imagen, faccion, ...</strong></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1008,11 +942,7 @@ document.getElementById('search-input').addEventListener('input', function() {
     const avg = calcPromedio(c);
     const item = document.createElement('div');
     item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
-    item.innerHTML = `
-      <img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'">
-      <span>${c.nombre}</span>
-      ${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}
-    `;
+    item.innerHTML = `<img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'"><span>${c.nombre}</span>${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}`;
     item.addEventListener('click', () => selectChar(i));
     nav.appendChild(item);
   });
@@ -1028,7 +958,7 @@ async function init() {
     allChars = buildCharacters(rows);
     dot.className = 'status-dot';
     if (!allChars.length) {
-      renderError('No se encontraron personajes. Asegurate de que haya datos desde la fila 2 y que la columna A (nombre) no esté vacía.');
+      renderError('No se encontraron personajes. Asegurate de que la columna A contenga la clave "nombre" y que las columnas siguientes tengan datos.');
       return;
     }
     renderSidebar(allChars);
