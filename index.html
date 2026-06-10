@@ -433,6 +433,43 @@
   color: var(--accent2);
 }
 
+/* Acordeón de filtros */
+.filter-accordion {
+  margin-bottom: 0.5rem;
+}
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+.filter-header:hover {
+  background: rgba(245,196,0,0.05);
+}
+.filter-header .accordion-icon {
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+.filter-header .accordion-icon.open {
+  transform: rotate(180deg);
+}
+.filter-content {
+  display: none;
+  padding-bottom: 0.5rem;
+}
+.filter-content.open {
+  display: block;
+}
+
 </style>
 </head>
 <body>
@@ -646,33 +683,37 @@ function getUniqueValues(prop) {
 function renderFilters() {
   const container = document.getElementById('filters');
   if (!container) return;
+  
   const elements = getUniqueValues('elemento');
   const rarities = getUniqueValues('rareza');
   const roles = getUniqueValues('rol');
+  
   let html = '';
-  if (elements.length) {
-    html += `<div class="filter-group"><label>Elemento</label><div class="filter-options">`;
-    elements.forEach(el => {
-      html += `<label><input type="checkbox" value="${el}" class="filter-element" ${selectedElements.has(el) ? 'checked' : ''}> ${el}</label>`;
+  
+  // Función auxiliar para crear un grupo de filtros
+  function renderFilterGroup(title, items, selectedSet, className) {
+    if (!items.length) return '';
+    let groupHtml = `<div class="filter-accordion">
+      <div class="filter-header" data-group="${className}">
+        <span>${title}</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="filter-content" id="filter-${className}">
+        <div class="filter-options">`;
+    items.forEach(item => {
+      groupHtml += `<label><input type="checkbox" value="${item}" class="filter-${className}" ${selectedSet.has(item) ? 'checked' : ''}> ${item}</label>`;
     });
-    html += `</div></div>`;
+    groupHtml += `</div></div></div>`;
+    return groupHtml;
   }
-  if (rarities.length) {
-    html += `<div class="filter-group"><label>Rango</label><div class="filter-options">`;
-    rarities.forEach(r => {
-      html += `<label><input type="checkbox" value="${r}" class="filter-rarity" ${selectedRarities.has(r) ? 'checked' : ''}> ${r}</label>`;
-    });
-    html += `</div></div>`;
-  }
-  if (roles.length) {
-    html += `<div class="filter-group"><label>Rol</label><div class="filter-options">`;
-    roles.forEach(r => {
-      html += `<label><input type="checkbox" value="${r}" class="filter-role" ${selectedRoles.has(r) ? 'checked' : ''}> ${r}</label>`;
-    });
-    html += `</div></div>`;
-  }
+  
+  html += renderFilterGroup('Elemento', elements, selectedElements, 'element');
+  html += renderFilterGroup('Rango', rarities, selectedRarities, 'rarity');
+  html += renderFilterGroup('Rol', roles, selectedRoles, 'role');
+  
   container.innerHTML = html;
-  // Attach event listeners
+  
+  // Adjuntar eventos a los checkboxes
   document.querySelectorAll('.filter-element').forEach(cb => cb.addEventListener('change', () => {
     if (cb.checked) selectedElements.add(cb.value);
     else selectedElements.delete(cb.value);
@@ -688,6 +729,21 @@ function renderFilters() {
     else selectedRoles.delete(cb.value);
     updateFilteredList();
   }));
+  
+  // Inicializar el comportamiento de acordeón
+  document.querySelectorAll('.filter-header').forEach(header => {
+    const groupName = header.dataset.group;
+    const content = document.getElementById(`filter-${groupName}`);
+    const icon = header.querySelector('.accordion-icon');
+    // Por defecto, todos los grupos cerrados
+    content.classList.remove('open');
+    icon.classList.remove('open');
+    header.addEventListener('click', (e) => {
+      e.stopPropagation();
+      content.classList.toggle('open');
+      icon.classList.toggle('open');
+    });
+  });
 }
 
 function filterCharacters() {
