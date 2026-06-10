@@ -396,6 +396,43 @@
   accent-color: var(--accent);
 }
 
+/* Popup flotante para descripciones táctiles */
+.description-popup {
+  position: fixed;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  max-width: 260px;
+  font-size: 0.85rem;
+  color: var(--text-bright);
+  z-index: 10000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.description-popup.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.description-popup .close-popup {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  color: var(--accent);
+  float: right;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-left: 0.5rem;
+  padding: 0;
+}
+.description-popup .close-popup:hover {
+  color: var(--accent2);
+}
+
 </style>
 </head>
 <body>
@@ -586,7 +623,9 @@ function renderEmojis(str) {
   const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
   return emojis.map(emoji => {
     const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
-    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
+    // Escapamos comillas dobles para que no rompan el atributo
+    const safeDesc = description.replace(/"/g, '&quot;');
+    return `<span class="emoji-badge" data-desc="${safeDesc}" style="cursor:pointer; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
   }).join('');
 }
 
@@ -719,15 +758,15 @@ function renderChar(c) {
     let val = parseFloat(c[key]);
     if (isNaN(val)) val = 0;
     const pct = (val / 10) * 100;
-    const tooltip = SCORE_TOOLTIPS[key] || '';
-    return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
-              <div class="rank-label">
-                ${label}
-                <span class="info-icon" title="${tooltip}">ⓘ</span>
-              </div>
-              <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
-              <div class="rank-value">${val > 0 ? val : '—'}</div>
-            </div>`;
+const tooltip = SCORE_TOOLTIPS[key] || '';
+return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
+          <div class="rank-label">
+            ${label}
+            <span class="info-icon" data-tip="${tooltip.replace(/"/g, '&quot;')}">ⓘ</span>
+          </div>
+          <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+          <div class="rank-value">${val > 0 ? val : '—'}</div>
+        </div>`;
   }).join('');
 
   const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
@@ -892,11 +931,86 @@ async function init() {
     renderWelcome(allChars);
     initMobileMenu();
     setupSearch();
+    setupDescriptionListeners();
   } catch (err) {
     dot.className = 'status-dot error';
     renderError(err.message || 'Error desconocido');
     console.error(err);
   }
+}
+
+// ══════════════════════════════════════════════════════════
+// POPUP TÁCTIL PARA DESCRIPCIONES
+// ══════════════════════════════════════════════════════════
+let activePopup = null;
+
+function showDescription(text, event) {
+  // Cerrar popup previo si existe
+  if (activePopup) activePopup.remove();
+  
+  const popup = document.createElement('div');
+  popup.className = 'description-popup';
+  popup.innerHTML = `<button class="close-popup">✕</button><div>${text}</div>`;
+  document.body.appendChild(popup);
+  
+  // Posicionar cerca del elemento pulsado
+  const rect = event.target.getBoundingClientRect();
+  let left = rect.left + window.scrollX;
+  let top = rect.bottom + window.scrollY + 8;
+  
+  // Evitar que se salga por la derecha
+  const popupWidth = 260;
+  if (left + popupWidth > window.innerWidth) {
+    left = window.innerWidth - popupWidth - 10;
+  }
+  // Evitar que se salga por abajo
+  const popupHeight = popup.offsetHeight;
+  if (top + popupHeight > window.scrollY + window.innerHeight) {
+    top = rect.top + window.scrollY - popupHeight - 8;
+  }
+  
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+  setTimeout(() => popup.classList.add('visible'), 10);
+  activePopup = popup;
+  
+  // Cerrar con el botón X
+  popup.querySelector('.close-popup').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    activePopup = null;
+  });
+  
+  // Cerrar al hacer clic fuera del popup
+  const closeHandler = (e) => {
+    if (!popup.contains(e.target) && e.target !== event.target) {
+      popup.remove();
+      activePopup = null;
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
+}
+
+// Delegación de eventos para emojis e iconos de información
+function setupDescriptionListeners() {
+  document.addEventListener('click', function(e) {
+    let target = e.target;
+    // Emojis
+    if (target.classList && target.classList.contains('emoji-badge')) {
+      const desc = target.getAttribute('data-desc');
+      if (desc) showDescription(desc, e);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    // Iconos de información
+    else if (target.classList && target.classList.contains('info-icon')) {
+      const tip = target.getAttribute('data-tip');
+      if (tip) showDescription(tip, e);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
 }
 
 init();
