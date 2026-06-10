@@ -367,7 +367,7 @@ const EXPECTED_KEYS = [
   'nec_arma', 'nec_dupes', 'mejores_dupes', 'mejores_compas', 'mejor_bangbu',
   'w_engines', 'sets_discos', 'disco_slot4', 'disco_slot5', 'disco_slot6',
   'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos',
-  'resumen'     // <-- NUEVO
+  'resumen'     // <-- NUEVO para emojis
 ];
 
 const SCORE_LABELS = {
@@ -382,6 +382,7 @@ const SCORE_LABELS = {
 
 const NEC_LEVELS = ['Nada', 'Poca', 'Media', 'Mucha', 'Obligatoria'];
 
+// Diccionario de emojis y tooltips
 const EMOJI_DESCRIPTIONS = {
   '💔': 'Reduce defensas / resistencias del enemigo',
   '📈': 'Amplifica el daño de todo el equipo',
@@ -392,9 +393,9 @@ const EMOJI_DESCRIPTIONS = {
   '🎯': 'Otorga daño extra',
   '⚡': 'Otorga regeneración de energía extra',
   '🌀': 'Ataca sin estar en el campo activo',
-  '🌸': 'Actúa reacciones de Bloom',
-  '🌪️': 'Actúa reacciones de Disorder',
-  '💥': 'Actúa reacciones de Totalize',
+  '🌸': 'Activa reacciones de Bloom',
+  '🌪️': 'Activa reacciones de Disorder',
+  '💥': 'Activa reacciones de Totalize',
   '💀': 'Alto daño con su Ultimate',
   '🔗': 'Alto daño en ataques en cadena',
   '⚙️': 'Alto daño con habilidad EX',
@@ -410,16 +411,6 @@ const EMOJI_DESCRIPTIONS = {
   '🔋': 'Escala con Recuperación de Energía'
 };
 
-function renderEmojis(str) {
-  if (!str) return '';
-  // Separar por espacios (los emojis los pondrás separados por espacio en la celda)
-  const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
-  return emojis.map(emoji => {
-    const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
-    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
-  }).join('');
-}
-
 // ══════════════════════════════════════════════════════════
 // FETCH DATOS (usando CSV para evitar problemas de tipos)
 // ══════════════════════════════════════════════════════════
@@ -429,7 +420,6 @@ async function fetchSheetData() {
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const csvText = await resp.text();
   
-  // Parsear CSV simple
   const rows = [];
   const lines = csvText.split(/\r?\n/);
   for (const line of lines) {
@@ -457,7 +447,6 @@ async function fetchSheetData() {
 function buildCharacters(rows) {
   if (rows.length < 2) return [];
   const headers = rows[0];
-  // Mapear índice de columna a clave
   const colIndexToKey = {};
   for (let i = 0; i < headers.length; i++) {
     const header = headers[i] ? headers[i].toLowerCase().trim() : '';
@@ -465,10 +454,9 @@ function buildCharacters(rows) {
       colIndexToKey[i] = header;
     }
   }
-  // Verificar que exista la columna 'nombre'
   const nombreIndex = Object.keys(colIndexToKey).find(idx => colIndexToKey[idx] === 'nombre');
   if (nombreIndex === undefined) {
-    throw new Error('No se encontró la columna "nombre" en la primera fila. Asegúrate de que la primera fila contenga exactamente "nombre" (minúsculas).');
+    throw new Error('No se encontró la columna "nombre" en la primera fila.');
   }
   
   const characters = [];
@@ -479,7 +467,7 @@ function buildCharacters(rows) {
     for (const colIdx in colIndexToKey) {
       const key = colIndexToKey[colIdx];
       let value = row[colIdx] !== undefined ? row[colIdx] : '';
-      value = value.replace(/^"|"$/g, ''); // limpiar comillas
+      value = value.replace(/^"|"$/g, '');
       charObj[key] = value;
     }
     if (charObj.nombre && charObj.nombre.trim() !== '') {
@@ -490,7 +478,7 @@ function buildCharacters(rows) {
 }
 
 // ══════════════════════════════════════════════════════════
-// UTILIDADES (igual que antes)
+// UTILIDADES
 // ══════════════════════════════════════════════════════════
 function calcPromedio(char) {
   let total = 0, count = 0;
@@ -499,6 +487,17 @@ function calcPromedio(char) {
     if (!isNaN(val) && val > 0) { total += val; count++; }
   }
   return count === 0 ? null : (total / count).toFixed(1);
+}
+
+function getScoreClass(avg) {
+  if (avg === null) return '';
+  const num = parseFloat(avg);
+  if (num < 3) return 'score-gris';
+  if (num < 5) return 'score-verde';
+  if (num < 7) return 'score-morado';
+  if (num < 8) return 'score-dorado';
+  if (num < 9) return 'score-celeste';
+  return 'score-multicolor';
 }
 
 function necClass(val) {
@@ -514,16 +513,15 @@ function splitPipe(str) {
 
 function renderEmojis(str) {
   if (!str) return '';
-  // Dividir por espacios, pero respetando emojis que no tienen espacio (normalmente van separados por espacio)
   const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
   return emojis.map(emoji => {
     const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
-    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.2rem; margin-right:0.2rem;">${emoji}</span>`;
+    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
   }).join('');
 }
 
 // ══════════════════════════════════════════════════════════
-// RENDER
+// RENDER (sidebar y personaje)
 // ══════════════════════════════════════════════════════════
 let allChars = [];
 let activeIdx = -1;
@@ -535,10 +533,12 @@ function renderSidebar(chars) {
     const avg = calcPromedio(c);
     const item = document.createElement('div');
     item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
+    // Clase de rareza para el borde de la imagen
+    const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
     item.innerHTML = `
-      <img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar rareza-${c.rareza ? c.rareza.toLowerCase() : ''}" onerror="this.style.display='none'">
+      <img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar ${rarezaClass}" onerror="this.style.display='none'">
       <span>${c.nombre}</span>
-    ${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}
+      ${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}
     `;
     item.addEventListener('click', () => selectChar(i));
     nav.appendChild(item);
@@ -550,6 +550,10 @@ function selectChar(idx) {
   renderSidebar(allChars);
   renderChar(allChars[idx]);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Cerrar menú móvil al seleccionar personaje
+  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
+    closeMenu();
+  }
 }
 
 function renderChar(c) {
@@ -597,16 +601,19 @@ function renderChar(c) {
     c.faccion  && `<span class="tag tag-faction">${c.faccion}</span>`,
   ].filter(Boolean).join('');
 
+  // Clase de rareza para el avatar grande
+  const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
+
   main.innerHTML = `
   <div class="char-card">
     <div class="char-header">
- <img class="char-avatar rareza-${c.rareza ? c.rareza.toLowerCase() : ''}" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
+      <img class="char-avatar ${rarezaClass}" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
       <div class="char-info">
-  <div class="char-name">${c.nombre}</div>
-  <div class="char-emojis" style="margin: 0.3rem 0;">${renderEmojis(c.resumen)}</div>
-  <div class="char-tags">${tags}</div>
-</div>
-   ${avg ? `<div class="char-score-big ${getScoreClass(avg)}">${avg}<div class="score-label">/ 10</div></div>` : ''}
+        <div class="char-name">${c.nombre}</div>
+        <div class="char-emojis" style="margin: 0.3rem 0;">${renderEmojis(c.resumen)}</div>
+        <div class="char-tags">${tags}</div>
+      </div>
+      ${avg ? `<div class="char-score-big ${getScoreClass(avg)}">${avg}<div class="score-label">/ 10</div></div>` : ''}
     </div>
     <div class="grid-2">
       <div class="panel"><div class="panel-title">Puntuaciones</div><div class="rank-list">${scoreRows}</div></div>
@@ -661,78 +668,11 @@ function renderError(msg) {
 }
 
 // ══════════════════════════════════════════════════════════
-// SEARCH
+// MENÚ MÓVIL (sin duplicados)
 // ══════════════════════════════════════════════════════════
-document.getElementById('search-input').addEventListener('input', function() {
-  const q = this.value.toLowerCase().trim();
-  const filtered = q ? allChars.filter(c => c.nombre.toLowerCase().includes(q)) : allChars;
-  const nav = document.getElementById('char-nav');
-  nav.innerHTML = '';
-  filtered.forEach(c => {
-    const i = allChars.indexOf(c);
-    const avg = calcPromedio(c);
-    const item = document.createElement('div');
-    item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
-    item.innerHTML = `<img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'"><span>${c.nombre}</span>${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}`;
-    item.addEventListener('click', () => selectChar(i));
-    nav.appendChild(item);
-  });
-});
-
-// ══════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════
-async function init() {
-  const dot = document.getElementById('status-dot');
-  try {
-    const rows = await fetchSheetData();
-    allChars = buildCharacters(rows);
-    dot.className = 'status-dot';
-    if (!allChars.length) {
-      renderError('No se encontraron personajes. Asegúrate de que la primera fila tenga los encabezados y las filas siguientes los datos.');
-      return;
-    }
-    renderSidebar(allChars);
-    renderWelcome(allChars);
-  } catch (err) {
-    dot.className = 'status-dot error';
-    renderError(err.message || 'Error desconocido');
-    console.error(err);
-  }
-}
-
-init();
-</script>
-
-<script>
-  // Menú hamburguesa para móvil
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-    });
-    // Cerrar menú al hacer clic en un personaje
-    document.getElementById('char-nav')?.addEventListener('click', () => {
-      if (window.innerWidth <= 768) sidebar.classList.remove('open');
-    });
-  }
-
-function getScoreClass(avg) {
-  if (avg === null) return '';
-  const num = parseFloat(avg);
-  if (num < 3) return 'score-gris';
-  if (num < 5) return 'score-verde';
-  if (num < 7) return 'score-morado';
-  if (num < 8) return 'score-dorado';
-  if (num < 9) return 'score-celeste';
-  return 'score-multicolor';
-}
-
-// ===================== MENÚ MÓVIL =====================
-const menuToggle = document.getElementById('menu-toggle');
-const sidebar = document.querySelector('.sidebar');
-const overlay = document.getElementById('menu-overlay');
+let sidebar;
+let overlay;
+let menuToggle;
 
 function closeMenu() {
   if (sidebar) sidebar.classList.remove('open');
@@ -744,31 +684,72 @@ function openMenu() {
   if (overlay) overlay.classList.add('active');
 }
 
-if (menuToggle && sidebar && overlay) {
+function initMobileMenu() {
+  menuToggle = document.getElementById('menu-toggle');
+  sidebar = document.querySelector('.sidebar');
+  overlay = document.getElementById('menu-overlay');
+  if (!menuToggle || !sidebar || !overlay) return;
+  
   menuToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (sidebar.classList.contains('open')) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
+    if (sidebar.classList.contains('open')) closeMenu();
+    else openMenu();
   });
-  // Cerrar al hacer clic en el overlay
   overlay.addEventListener('click', closeMenu);
-  // Cerrar al seleccionar un personaje (se dispara desde el evento click en los items)
-  document.getElementById('char-nav')?.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      closeMenu();
-    }
-  });
-  // Cerrar al redimensionar la ventana a escritorio
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) {
-      closeMenu();
-    }
+    if (window.innerWidth > 768) closeMenu();
   });
 }
 
+// ══════════════════════════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════════════════════════
+function setupSearch() {
+  const searchInput = document.getElementById('search-input');
+  if (!searchInput) return;
+  searchInput.addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    const filtered = q ? allChars.filter(c => c.nombre.toLowerCase().includes(q)) : allChars;
+    const nav = document.getElementById('char-nav');
+    nav.innerHTML = '';
+    filtered.forEach(c => {
+      const i = allChars.indexOf(c);
+      const avg = calcPromedio(c);
+      const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
+      const item = document.createElement('div');
+      item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
+      item.innerHTML = `<img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar ${rarezaClass}" onerror="this.style.display='none'"><span>${c.nombre}</span>${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}`;
+      item.addEventListener('click', () => selectChar(i));
+      nav.appendChild(item);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+async function init() {
+  const dot = document.getElementById('status-dot');
+  try {
+    const rows = await fetchSheetData();
+    allChars = buildCharacters(rows);
+    dot.className = 'status-dot';
+    if (!allChars.length) {
+      renderError('No se encontraron personajes. Asegúrate de que la primera fila tenga los encabezados.');
+      return;
+    }
+    renderSidebar(allChars);
+    renderWelcome(allChars);
+    initMobileMenu();
+    setupSearch();
+  } catch (err) {
+    dot.className = 'status-dot error';
+    renderError(err.message || 'Error desconocido');
+    console.error(err);
+  }
+}
+
+init();
 </script>
 
 </body>
