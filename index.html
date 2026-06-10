@@ -150,447 +150,420 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
- @media (max-width: 768px) {
-  /* ===== MENÚ HAMBURGUESA ===== */
-  .sidebar {
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      top: 60px;
+      left: -280px;
+      width: 280px;
+      height: calc(100vh - 60px);
+      background: var(--surface);
+      z-index: 1000;
+      transition: left 0.3s ease;
+      border-right: 1px solid var(--border);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+      overflow-y: auto;
+    }
+    .sidebar.open {
+      left: 0;
+    }
+    #menu-toggle {
+      display: block !important;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 1.8rem;
+      cursor: pointer;
+      padding: 0 0.5rem;
+      margin-left: 0.5rem;
+    }
+    .menu-overlay {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      display: none;
+    }
+    .menu-overlay.active {
+      display: block;
+    }
+    main {
+      padding: 0.8rem;
+      width: 100%;
+    }
+    .grid-2, .grid-3 {
+      grid-template-columns: 1fr !important;
+      gap: 0.8rem;
+    }
+    .char-card {
+      margin: 0;
+    }
+    .char-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem;
+    }
+    .char-avatar {
+      width: 80px;
+      height: 80px;
+    }
+    .char-name {
+      font-size: 1.6rem;
+    }
+    .char-score-big {
+      font-size: 2.2rem;
+      margin-top: 0.5rem;
+    }
+    .char-tags {
+      justify-content: center;
+    }
+    .panel {
+      padding: 0.8rem;
+    }
+    .rank-row {
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .rank-label {
+      width: 100%;
+      font-size: 0.8rem;
+    }
+    .rank-bar-track {
+      width: 100%;
+    }
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+    .stat-numbers {
+      grid-template-columns: 1fr 1fr;
+    }
+    .weapon-chain {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .weapon-item {
+      font-size: 0.8rem;
+      width: 100%;
+      text-align: center;
+    }
+    .weapon-sep {
+      display: none;
+    }
+    .disk-set {
+      font-size: 0.8rem;
+    }
+    .emoji-badge {
+      font-size: 1.2rem;
+    }
+    .info-val {
+      font-size: 0.85rem;
+    }
+    .tip-item {
+      font-size: 0.8rem;
+    }
+    .char-nav-item {
+      padding: 0.8rem 1rem;
+      gap: 0.8rem;
+    }
+    .char-nav-item img {
+      width: 40px;
+      height: 40px;
+    }
+    .nav-rank-badge {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+    }
+  }
+  .emoji-badge {
+    display: inline-block;
+    transition: transform 0.1s;
+  }
+  .emoji-badge:hover {
+    transform: scale(1.15);
+  }
+  @media (max-width: 768px) {
+    .emoji-badge {
+      font-size: 1.1rem;
+    }
+  }
+  .char-avatar.rareza-a {
+    border-color: #aa66ff;
+    box-shadow: 0 0 12px rgba(170,102,255,0.5);
+  }
+  .char-avatar.rareza-s {
+    border-color: #f5c400;
+    box-shadow: 0 0 12px rgba(245,196,0,0.6);
+  }
+  .score-gris { color: #6c757d; text-shadow: none; }
+  .score-verde { color: #28a745; text-shadow: 0 0 6px rgba(40,167,69,0.3); }
+  .score-morado { color: #aa66ff; text-shadow: 0 0 6px rgba(170,102,255,0.3); }
+  .score-dorado { color: #f5c400; text-shadow: 0 0 6px rgba(245,196,0,0.3); }
+  .score-celeste { color: #00d4ff; text-shadow: 0 0 6px rgba(0,212,255,0.3); }
+  .score-multicolor {
+    background: linear-gradient(90deg, #f5c400, #ff6b1a, #00d4ff, #aa66ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+  }
+  .info-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: rgba(0,212,255,0.2);
+    color: var(--accent3);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: help;
+    margin-left: 0.3rem;
+    transition: all 0.2s;
+  }
+  .info-icon:hover {
+    background: var(--accent3);
+    color: var(--bg);
+    transform: scale(1.1);
+  }
+  #filters {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-group {
+    margin-bottom: 1rem;
+  }
+  .filter-group label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+  }
+  .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .filter-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.75rem;
+    text-transform: none;
+    color: var(--text);
+    background: var(--surface2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .filter-options label:hover {
+    background: var(--border);
+  }
+  .filter-options input {
+    margin: 0;
+    accent-color: var(--accent);
+  }
+  .description-popup {
     position: fixed;
-    top: 60px;
-    left: -280px;
-    width: 280px;
-    height: calc(100vh - 60px);
-    background: var(--surface);
-    z-index: 1000;
-    transition: left 0.3s ease;
-    border-right: 1px solid var(--border);
-    box-shadow: 2px 0 12px rgba(0,0,0,0.3);
-    overflow-y: auto;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    max-width: 260px;
+    font-size: 0.85rem;
+    color: var(--text-bright);
+    z-index: 10000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
   }
-  .sidebar.open {
-    left: 0;
+  .description-popup.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
-  /* Botón hamburguesa (si no existe, lo agregamos) */
-  #menu-toggle {
-    display: block !important;
+  .description-popup .close-popup {
+    pointer-events: auto;
     background: none;
     border: none;
     color: var(--accent);
-    font-size: 1.8rem;
+    float: right;
     cursor: pointer;
-    padding: 0 0.5rem;
+    font-size: 1.2rem;
+    line-height: 1;
     margin-left: 0.5rem;
+    padding: 0;
   }
-  /* Overlay para cerrar al tocar fuera */
-  .menu-overlay {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 60px);
-    background: rgba(0,0,0,0.6);
-    z-index: 999;
+  .description-popup .close-popup:hover {
+    color: var(--accent2);
+  }
+  .filter-accordion {
+    margin-bottom: 0.5rem;
+  }
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+  }
+  .filter-header:hover {
+    background: rgba(245,196,0,0.05);
+  }
+  .filter-header .accordion-icon {
+    font-size: 1rem;
+    transition: transform 0.2s;
+  }
+  .filter-header .accordion-icon.open {
+    transform: rotate(180deg);
+  }
+  .filter-content {
     display: none;
+    padding-bottom: 0.5rem;
   }
-  .menu-overlay.active {
+  .filter-content.open {
     display: block;
   }
-
-  /* ===== AJUSTES GENERALES ===== */
-  main {
-    padding: 0.8rem;
-    width: 100%;
+  #tierlist-container {
+    max-width: 1200px;
+    margin: 0 auto;
   }
-  .grid-2, .grid-3 {
-    grid-template-columns: 1fr !important;
-    gap: 0.8rem;
-  }
-  .char-card {
-    margin: 0;
-  }
-  .char-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 1rem;
-  }
-  .char-avatar {
-    width: 80px;
-    height: 80px;
-  }
-  .char-name {
-    font-size: 1.6rem;
-  }
-  .char-score-big {
-    font-size: 2.2rem;
-    margin-top: 0.5rem;
-  }
-  .char-tags {
+  .tier-mode-selector {
+    display: flex;
+    gap: 1rem;
     justify-content: center;
+    margin-bottom: 2rem;
   }
-  .panel {
-    padding: 0.8rem;
+  .tier-mode-selector button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 1.2rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
   }
-  .rank-row {
-    gap: 0.5rem;
+  .tier-mode-selector button.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .tier-row {
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .tier-header {
+    background: var(--surface2);
+    padding: 0.6rem 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+  }
+  .tier-header .tier-name {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+  }
+  .tier-cards {
+    display: flex;
     flex-wrap: wrap;
-  }
-  .rank-label {
-    width: 100%;
-    font-size: 0.8rem;
-  }
-  .rank-bar-track {
-    width: 100%;
-  }
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  .stat-numbers {
-    grid-template-columns: 1fr 1fr;
-  }
-  .weapon-chain {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .weapon-item {
-    font-size: 0.8rem;
-    width: 100%;
-    text-align: center;
-  }
-  .weapon-sep {
-    display: none;
-  }
-  .disk-set {
-    font-size: 0.8rem;
-  }
-  .emoji-badge {
-    font-size: 1.2rem;
-  }
-  .info-val {
-    font-size: 0.85rem;
-  }
-  .tip-item {
-    font-size: 0.8rem;
-  }
-  /* Elementos de la barra lateral más táctiles */
-  .char-nav-item {
-    padding: 0.8rem 1rem;
     gap: 0.8rem;
+    padding: 1rem;
+    min-height: 120px;
   }
-  .char-nav-item img {
-    width: 40px;
-    height: 40px;
-  }
-  .nav-rank-badge {
-    font-size: 0.8rem;
-    padding: 0.2rem 0.5rem;
-  }
-}
-
-.emoji-badge {
-  display: inline-block;
-  transition: transform 0.1s;
-}
-.emoji-badge:hover {
-  transform: scale(1.15);
-}
-@media (max-width: 768px) {
-  .emoji-badge {
-    font-size: 1.1rem;
-  }
-}
-
-/* Bordes para rareza */
-.char-avatar.rareza-a {
-  border-color: #aa66ff;  /* Violeta */
-  box-shadow: 0 0 12px rgba(170, 102, 255, 0.5);
-}
-.char-avatar.rareza-s {
-  border-color: #f5c400;  /* Dorado */
-  box-shadow: 0 0 12px rgba(245, 196, 0, 0.6);
-}
-
-/* Colores para la puntuación promedio */
-.score-gris { color: #6c757d; text-shadow: none; }
-.score-verde { color: #28a745; text-shadow: 0 0 6px rgba(40,167,69,0.3); }
-.score-morado { color: #aa66ff; text-shadow: 0 0 6px rgba(170,102,255,0.3); }
-.score-dorado { color: #f5c400; text-shadow: 0 0 6px rgba(245,196,0,0.3); }
-.score-celeste { color: #00d4ff; text-shadow: 0 0 6px rgba(0,212,255,0.3); }
-.score-multicolor {
-  background: linear-gradient(90deg, #f5c400, #ff6b1a, #00d4ff, #aa66ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: none;
-}
-
-/* Tooltips de puntuaciones */
-.score-tooltip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-.info-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: rgba(0,212,255,0.2);
-  color: var(--accent3);
-  border-radius: 50%;
-  text-align: center;
-  line-height: 16px;
-  font-size: 11px;
-  font-weight: bold;
-  cursor: help;
-  margin-left: 0.3rem;
-  transition: all 0.2s;
-}
-.info-icon:hover {
-  background: var(--accent3);
-  color: var(--bg);
-  transform: scale(1.1);
-}
-
-/* Estilos para los filtros */
-#filters {
-  padding: 0.5rem 1rem;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-}
-.filter-group {
-  margin-bottom: 1rem;
-}
-.filter-group label {
-  display: block;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  margin-bottom: 0.4rem;
-  text-transform: uppercase;
-}
-.filter-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.filter-options label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.75rem;
-  text-transform: none;
-  color: var(--text);
-  background: var(--surface2);
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.filter-options label:hover {
-  background: var(--border);
-}
-.filter-options input {
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-/* Popup flotante para descripciones táctiles */
-.description-popup {
-  position: fixed;
-  background: var(--surface2);
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  max-width: 260px;
-  font-size: 0.85rem;
-  color: var(--text-bright);
-  z-index: 10000;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  backdrop-filter: blur(12px);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-.description-popup.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-.description-popup .close-popup {
-  pointer-events: auto;
-  background: none;
-  border: none;
-  color: var(--accent);
-  float: right;
-  cursor: pointer;
-  font-size: 1.2rem;
-  line-height: 1;
-  margin-left: 0.5rem;
-  padding: 0;
-}
-.description-popup .close-popup:hover {
-  color: var(--accent2);
-}
-
-/* Acordeón de filtros */
-.filter-accordion {
-  margin-bottom: 0.5rem;
-}
-.filter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  padding: 0.5rem 0;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  text-transform: uppercase;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0.5rem;
-}
-.filter-header:hover {
-  background: rgba(245,196,0,0.05);
-}
-.filter-header .accordion-icon {
-  font-size: 1rem;
-  transition: transform 0.2s;
-}
-.filter-header .accordion-icon.open {
-  transform: rotate(180deg);
-}
-.filter-content {
-  display: none;
-  padding-bottom: 0.5rem;
-}
-.filter-content.open {
-  display: block;
-}
-
-/* ----- TIER LIST ----- */
-#tierlist-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.tier-mode-selector {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-.tier-mode-selector button {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 0.5rem 1.2rem;
-  border-radius: 30px;
-  cursor: pointer;
-  font-family: 'Rajdhani', sans-serif;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-.tier-mode-selector button.active {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
-}
-.tier-row {
-  margin-bottom: 1.5rem;
-  background: var(--surface);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.tier-header {
-  background: var(--surface2);
-  padding: 0.6rem 1rem;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--border);
-}
-.tier-header .tier-name {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--bg);
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  margin-left: 0.5rem;
-}
-.tier-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  padding: 1rem;
-  min-height: 120px;
-}
-.tier-card {
-  width: 100px;
-  background: var(--surface2);
-  border-radius: 8px;
-  text-align: center;
-  padding: 0.5rem;
-  cursor: grab;
-  transition: transform 0.1s, box-shadow 0.2s;
-  border: 1px solid var(--border);
-}
-.tier-card:active {
-  cursor: grabbing;
-}
-.tier-card.dragging {
-  opacity: 0.5;
-}
-.tier-card img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--accent);
-  margin-bottom: 0.3rem;
-}
-.tier-card span {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-bright);
-}
-.tier-card .avg-score {
-  font-size: 0.6rem;
-  color: var(--accent);
-}
-.custom-tier-actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-.custom-tier-actions button {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.reset-tier-btn {
-  background: rgba(255,62,94,0.2);
-  border-color: var(--red);
-  color: var(--red);
-}
-@media (max-width: 768px) {
   .tier-card {
-    width: 80px;
+    width: 100px;
+    background: var(--surface2);
+    border-radius: 8px;
+    text-align: center;
+    padding: 0.5rem;
+    cursor: grab;
+    transition: transform 0.1s, box-shadow 0.2s;
+    border: 1px solid var(--border);
+  }
+  .tier-card:active {
+    cursor: grabbing;
+  }
+  .tier-card.dragging {
+    opacity: 0.5;
   }
   .tier-card img {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    margin-bottom: 0.3rem;
   }
-}
-
+  .tier-card span {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+  .tier-card .avg-score {
+    font-size: 0.6rem;
+    color: var(--accent);
+  }
+  .custom-tier-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .custom-tier-actions button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .reset-tier-btn {
+    background: rgba(255,62,94,0.2);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  @media (max-width: 768px) {
+    .tier-card {
+      width: 80px;
+    }
+    .tier-card img {
+      width: 50px;
+      height: 50px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -612,13 +585,9 @@
   <div id="char-nav"></div>
 </aside>
 <div id="menu-overlay" class="menu-overlay"></div>
-  <main id="main-content">
-  <div id="wiki-container">
-    <!-- Aquí se cargará dinámicamente la wiki (lo que ya tenías) -->
-  </div>
-  <div id="tierlist-container" style="display: none;">
-    <!-- La tier list se generará con JS -->
-  </div>
+<main id="main-content">
+  <div id="wiki-container"></div>
+  <div id="tierlist-container" style="display: none;"></div>
 </main>
 </div>
 
@@ -643,7 +612,6 @@ const EXPECTED_KEYS = [
   'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos', 'resumen'
 ];
 
-// Descripciones para los tooltips de puntuaciones
 const SCORE_LABELS = {
   sc_utilidad: 'Utilidad',
   sc_facilidad_build: 'Facilidad de Buildeo',
@@ -666,7 +634,6 @@ const SCORE_TOOLTIPS = {
 
 const NEC_LEVELS = ['Nada', 'Poca', 'Media', 'Mucha', 'Obligatoria'];
 
-// Diccionario de emojis y tooltips
 const EMOJI_DESCRIPTIONS = {
   '💔': 'Reduce defensas / resistencias del enemigo',
   '📈': 'Amplifica el daño de todo el equipo',
@@ -786,7 +753,6 @@ function renderEmojis(str) {
   const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
   return emojis.map(emoji => {
     const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
-    // Escapamos comillas dobles para que no rompan el atributo
     const safeDesc = description.replace(/"/g, '&quot;');
     return `<span class="emoji-badge" data-desc="${safeDesc}" style="cursor:pointer; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
   }).join('');
@@ -816,7 +782,6 @@ function renderFilters() {
   
   let html = '';
   
-  // Función auxiliar para crear un grupo de filtros
   function renderFilterGroup(title, items, selectedSet, className) {
     if (!items.length) return '';
     let groupHtml = `<div class="filter-accordion">
@@ -839,7 +804,6 @@ function renderFilters() {
   
   container.innerHTML = html;
   
-  // Adjuntar eventos a los checkboxes
   document.querySelectorAll('.filter-element').forEach(cb => cb.addEventListener('change', () => {
     if (cb.checked) selectedElements.add(cb.value);
     else selectedElements.delete(cb.value);
@@ -856,12 +820,10 @@ function renderFilters() {
     updateFilteredList();
   }));
   
-  // Inicializar el comportamiento de acordeón
   document.querySelectorAll('.filter-header').forEach(header => {
     const groupName = header.dataset.group;
     const content = document.getElementById(`filter-${groupName}`);
     const icon = header.querySelector('.accordion-icon');
-    // Por defecto, todos los grupos cerrados
     content.classList.remove('open');
     icon.classList.remove('open');
     header.addEventListener('click', (e) => {
@@ -874,13 +836,9 @@ function renderFilters() {
 
 function filterCharacters() {
   return allChars.filter(char => {
-    // Filtro búsqueda
     if (currentSearchTerm && !char.nombre.toLowerCase().includes(currentSearchTerm)) return false;
-    // Filtro elemento
     if (selectedElements.size && !selectedElements.has(char.elemento)) return false;
-    // Filtro rareza
     if (selectedRarities.size && !selectedRarities.has(char.rareza)) return false;
-    // Filtro rol
     if (selectedRoles.size && !selectedRoles.has(char.rol)) return false;
     return true;
   });
@@ -889,7 +847,6 @@ function filterCharacters() {
 function updateFilteredList() {
   const filtered = filterCharacters();
   renderSidebar(filtered);
-  // Si el personaje activo ya no está en los filtrados, seleccionar el primero si existe
   if (activeIdx !== -1 && !filtered.includes(allChars[activeIdx])) {
     if (filtered.length > 0) {
       const newActive = allChars.indexOf(filtered[0]);
@@ -929,16 +886,14 @@ function selectChar(idx) {
   renderSidebar(filtered);
   renderChar(allChars[idx]);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-if (window.innerWidth <= 768) {
-  const sidebarElem = document.querySelector('.sidebar');
-  if (sidebarElem && sidebarElem.classList.contains('open')) {
-    if (typeof closeMenu === 'function') closeMenu();
+  if (window.innerWidth <= 768) {
+    const sidebarElem = document.querySelector('.sidebar');
+    if (sidebarElem && sidebarElem.classList.contains('open') && typeof closeMenu === 'function') closeMenu();
   }
 }
 
 function renderChar(c) {
   const avg = calcPromedio(c);
-  // Generar filas de puntuaciones con tooltips
   const scoreRows = Object.entries(SCORE_LABELS).map(([key, label]) => {
     let val = parseFloat(c[key]);
     if (isNaN(val)) val = 0;
@@ -1097,15 +1052,13 @@ function setupSearch() {
 }
 
 // ===================== TIER LIST =====================
-let currentTierMode = 'auto'; // 'auto' o 'custom'
-let customTiers = [];  // array de objetos: { name, characters: [charIndex] }
+let currentTierMode = 'auto';
+let customTiers = [];
 
-// Obtener todas las clases (roles) únicas de personajes
 function getAllRoles() {
   return [...new Set(allChars.map(c => c.rol).filter(r => r && r.trim() !== ''))];
 }
 
-// Generar tier list automática: agrupa por rol y rango de promedio
 function generateAutoTierList() {
   const roles = getAllRoles();
   const tiers = [
@@ -1116,12 +1069,10 @@ function generateAutoTierList() {
     { min: 3, max: 4.99, name: 'C (3-5)' },
     { min: 0, max: 2.99, name: 'D (0-3)' }
   ];
-  
   let html = `<div class="tier-mode-selector">
     <button class="tier-auto-btn active">📊 Automática por promedio</button>
     <button class="tier-custom-btn">🎮 Personalizada (arrastrable)</button>
   </div>`;
-  
   for (const rol of roles) {
     html += `<div class="tier-rol-group" style="margin-bottom:2rem;">
       <h3 style="color:var(--accent2); margin-bottom:0.5rem;">${rol}</h3>`;
@@ -1149,13 +1100,11 @@ function generateAutoTierList() {
   return html;
 }
 
-// Inicializar tier list personalizada (cargar desde localStorage o crear por defecto)
 function initCustomTiers() {
   const saved = localStorage.getItem('zzz_custom_tiers');
   if (saved) {
     customTiers = JSON.parse(saved);
   } else {
-    // Por defecto: crear filas S, A, B, C, D con personajes ordenados por promedio
     const sorted = [...allChars].sort((a,b) => parseFloat(calcPromedio(b)) - parseFloat(calcPromedio(a)));
     const tiersDefault = [
       { name: 'S (9-10)', characters: [] },
@@ -1178,27 +1127,23 @@ function initCustomTiers() {
   }
 }
 
-// Guardar tier list personalizada en localStorage
 function saveCustomTiers() {
   localStorage.setItem('zzz_custom_tiers', JSON.stringify(customTiers));
 }
 
-// Renderizar la tier list personalizada (drag & drop)
 function renderCustomTierList() {
   let html = `<div class="tier-mode-selector">
     <button class="tier-auto-btn">📊 Automática por promedio</button>
     <button class="tier-custom-btn active">🎮 Personalizada (arrastrable)</button>
   </div>
   <div id="custom-tier-container">`;
-  
   customTiers.forEach((tier, idx) => {
     html += `<div class="tier-row" data-tier-index="${idx}">
       <div class="tier-header">
         <input type="text" class="tier-name-input" value="${tier.name}" style="background:var(--surface2); border:1px solid var(--border); color:var(--text-bright); padding:0.2rem 0.5rem; border-radius:4px; width:120px;">
         <button class="remove-tier-btn" data-tier="${idx}" style="background:none; border:none; color:var(--red); cursor:pointer;">✕</button>
       </div>
-      <div class="tier-cards" data-tier="${idx}" data-dropzone="true">
-  `;
+      <div class="tier-cards" data-tier="${idx}" data-dropzone="true">`;
     for (const charIdx of tier.characters) {
       const ch = allChars[charIdx];
       if (!ch) continue;
@@ -1211,22 +1156,16 @@ function renderCustomTierList() {
     }
     html += `</div></div>`;
   });
-  
   html += `<div class="custom-tier-actions">
     <button id="add-tier-btn">➕ Añadir fila</button>
     <button id="reset-custom-tier" class="reset-tier-btn">⟳ Restablecer por promedio</button>
   </div></div>`;
-  
   document.getElementById('tierlist-container').innerHTML = html;
-  
-  // Adjuntar eventos de drag & drop
   attachDragAndDropEvents();
-  // Eventos para botones de eliminar fila, añadir fila, reset
   document.querySelectorAll('.remove-tier-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const tierIdx = parseInt(btn.dataset.tier);
       if (customTiers.length > 1) {
-        // Mover personajes de la fila eliminada a la fila superior (si existe) o inferior
         const charsToMove = customTiers[tierIdx].characters;
         customTiers.splice(tierIdx, 1);
         if (customTiers.length > 0) {
@@ -1244,32 +1183,15 @@ function renderCustomTierList() {
     renderCustomTierList();
   });
   document.getElementById('reset-custom-tier')?.addEventListener('click', () => {
-    initCustomTiers(); // reinicia según promedios
+    initCustomTiers();
     saveCustomTiers();
     renderCustomTierList();
   });
-  // Eventos para renombrar fila
   document.querySelectorAll('.tier-name-input').forEach((input, idx) => {
     input.addEventListener('change', (e) => {
       customTiers[idx].name = e.target.value;
       saveCustomTiers();
     });
-  });
-}
-
-// Funciones para drag & drop
-function attachDragAndDropEvents() {
-  const cards = document.querySelectorAll('.tier-card');
-  const dropZones = document.querySelectorAll('[data-dropzone="true"]');
-  
-  cards.forEach(card => {
-    card.addEventListener('dragstart', handleDragStart);
-    card.addEventListener('dragend', handleDragEnd);
-    card.setAttribute('draggable', 'true');
-  });
-  dropZones.forEach(zone => {
-    zone.addEventListener('dragover', handleDragOver);
-    zone.addEventListener('drop', handleDrop);
   });
 }
 
@@ -1303,22 +1225,31 @@ function handleDrop(e) {
   const targetTierIdx = parseInt(targetZone.dataset.tier);
   if (isNaN(targetTierIdx)) return;
   if (draggedCharIdx === null || draggedOriginTier === null) return;
-  
-  // Mover personaje de origen a destino
   const originTier = customTiers[draggedOriginTier];
   const charIndexInOrigin = originTier.characters.indexOf(draggedCharIdx);
   if (charIndexInOrigin !== -1) originTier.characters.splice(charIndexInOrigin, 1);
   customTiers[targetTierIdx].characters.push(draggedCharIdx);
-  
   saveCustomTiers();
   renderCustomTierList();
 }
 
-// Mostrar/ocultar tier list y wiki
+function attachDragAndDropEvents() {
+  const cards = document.querySelectorAll('.tier-card');
+  const dropZones = document.querySelectorAll('[data-dropzone="true"]');
+  cards.forEach(card => {
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragend', handleDragEnd);
+    card.setAttribute('draggable', 'true');
+  });
+  dropZones.forEach(zone => {
+    zone.addEventListener('dragover', handleDragOver);
+    zone.addEventListener('drop', handleDrop);
+  });
+}
+
 function showWiki() {
   document.getElementById('wiki-container').style.display = 'block';
   document.getElementById('tierlist-container').style.display = 'none';
-  // Si hay un personaje activo, mostrarlo; si no, mostrar bienvenida
   if (allChars.length > 0) {
     if (activeIdx !== -1 && allChars[activeIdx]) {
       renderChar(allChars[activeIdx]);
@@ -1327,28 +1258,84 @@ function showWiki() {
     }
   }
 }
+
 function showTierList() {
   document.getElementById('wiki-container').style.display = 'none';
   document.getElementById('tierlist-container').style.display = 'block';
-  // Generar según el modo actual
   if (currentTierMode === 'auto') {
     document.getElementById('tierlist-container').innerHTML = generateAutoTierList();
   } else {
     initCustomTiers();
     renderCustomTierList();
   }
-  // Re-enganchar eventos de cambio de modo
-  document.querySelectorAll('.tier-auto-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentTierMode = 'auto';
-      showTierList();
-    });
+  const autoBtn = document.querySelector('.tier-auto-btn');
+  const customBtn = document.querySelector('.tier-custom-btn');
+  if (autoBtn) autoBtn.addEventListener('click', () => {
+    currentTierMode = 'auto';
+    showTierList();
   });
-  document.querySelectorAll('.tier-custom-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentTierMode = 'custom';
-      showTierList();
-    });
+  if (customBtn) customBtn.addEventListener('click', () => {
+    currentTierMode = 'custom';
+    showTierList();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// POPUP TÁCTIL PARA DESCRIPCIONES
+// ══════════════════════════════════════════════════════════
+let activePopup = null;
+
+function showDescription(text, event) {
+  if (activePopup) activePopup.remove();
+  const popup = document.createElement('div');
+  popup.className = 'description-popup';
+  popup.innerHTML = `<button class="close-popup">✕</button><div>${text}</div>`;
+  document.body.appendChild(popup);
+  const rect = event.target.getBoundingClientRect();
+  let left = rect.left + window.scrollX;
+  let top = rect.bottom + window.scrollY + 8;
+  const popupWidth = 260;
+  if (left + popupWidth > window.innerWidth) {
+    left = window.innerWidth - popupWidth - 10;
+  }
+  const popupHeight = popup.offsetHeight;
+  if (top + popupHeight > window.scrollY + window.innerHeight) {
+    top = rect.top + window.scrollY - popupHeight - 8;
+  }
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+  setTimeout(() => popup.classList.add('visible'), 10);
+  activePopup = popup;
+  popup.querySelector('.close-popup').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.remove();
+    activePopup = null;
+  });
+  const closeHandler = (e) => {
+    if (!popup.contains(e.target) && e.target !== event.target) {
+      popup.remove();
+      activePopup = null;
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
+}
+
+function setupDescriptionListeners() {
+  document.addEventListener('click', function(e) {
+    let target = e.target;
+    if (target.classList && target.classList.contains('emoji-badge')) {
+      const desc = target.getAttribute('data-desc');
+      if (desc) showDescription(desc, e);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    else if (target.classList && target.classList.contains('info-icon')) {
+      const tip = target.getAttribute('data-tip');
+      if (tip) showDescription(tip, e);
+      e.preventDefault();
+      e.stopPropagation();
+    }
   });
 }
 
@@ -1365,19 +1352,18 @@ async function init() {
       renderError('No se encontraron personajes. Asegúrate de que la primera fila tenga los encabezados.');
       return;
     }
-// Configurar botón de toggle
-const toggleBtn = document.getElementById('toggle-tierlist-btn');
-toggleBtn.addEventListener('click', () => {
-  if (document.getElementById('tierlist-container').style.display === 'none') {
-    showTierList();
-    toggleBtn.textContent = '📖 WIKI';
-  } else {
+    const toggleBtn = document.getElementById('toggle-tierlist-btn');
+    toggleBtn.addEventListener('click', () => {
+      if (document.getElementById('tierlist-container').style.display === 'none') {
+        showTierList();
+        toggleBtn.textContent = '📖 WIKI';
+      } else {
+        showWiki();
+        toggleBtn.textContent = '📊 TIER LIST';
+      }
+    });
     showWiki();
-    toggleBtn.textContent = '📊 TIER LIST';
-  }
-});
-showWiki(); // por defecto mostrar wiki
-    renderFilters();      // Generar los filtros dinámicos
+    renderFilters();
     renderSidebar(allChars);
     renderWelcome(allChars);
     initMobileMenu();
@@ -1388,80 +1374,6 @@ showWiki(); // por defecto mostrar wiki
     renderError(err.message || 'Error desconocido');
     console.error(err);
   }
-}
-
-// ══════════════════════════════════════════════════════════
-// POPUP TÁCTIL PARA DESCRIPCIONES
-// ══════════════════════════════════════════════════════════
-let activePopup = null;
-
-function showDescription(text, event) {
-  // Cerrar popup previo si existe
-  if (activePopup) activePopup.remove();
-  
-  const popup = document.createElement('div');
-  popup.className = 'description-popup';
-  popup.innerHTML = `<button class="close-popup">✕</button><div>${text}</div>`;
-  document.body.appendChild(popup);
-  
-  // Posicionar cerca del elemento pulsado
-  const rect = event.target.getBoundingClientRect();
-  let left = rect.left + window.scrollX;
-  let top = rect.bottom + window.scrollY + 8;
-  
-  // Evitar que se salga por la derecha
-  const popupWidth = 260;
-  if (left + popupWidth > window.innerWidth) {
-    left = window.innerWidth - popupWidth - 10;
-  }
-  // Evitar que se salga por abajo
-  const popupHeight = popup.offsetHeight;
-  if (top + popupHeight > window.scrollY + window.innerHeight) {
-    top = rect.top + window.scrollY - popupHeight - 8;
-  }
-  
-  popup.style.left = left + 'px';
-  popup.style.top = top + 'px';
-  setTimeout(() => popup.classList.add('visible'), 10);
-  activePopup = popup;
-  
-  // Cerrar con el botón X
-  popup.querySelector('.close-popup').addEventListener('click', (e) => {
-    e.stopPropagation();
-    popup.remove();
-    activePopup = null;
-  });
-  
-  // Cerrar al hacer clic fuera del popup
-  const closeHandler = (e) => {
-    if (!popup.contains(e.target) && e.target !== event.target) {
-      popup.remove();
-      activePopup = null;
-      document.removeEventListener('click', closeHandler);
-    }
-  };
-  setTimeout(() => document.addEventListener('click', closeHandler), 0);
-}
-
-// Delegación de eventos para emojis e iconos de información
-function setupDescriptionListeners() {
-  document.addEventListener('click', function(e) {
-    let target = e.target;
-    // Emojis
-    if (target.classList && target.classList.contains('emoji-badge')) {
-      const desc = target.getAttribute('data-desc');
-      if (desc) showDescription(desc, e);
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    // Iconos de información
-    else if (target.classList && target.classList.contains('info-icon')) {
-      const tip = target.getAttribute('data-tip');
-      if (tip) showDescription(tip, e);
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  });
 }
 
 init();
