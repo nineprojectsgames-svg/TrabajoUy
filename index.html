@@ -324,6 +324,78 @@
   text-shadow: none;
 }
 
+/* Tooltips de puntuaciones */
+.score-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.info-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: rgba(0,212,255,0.2);
+  color: var(--accent3);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 16px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: help;
+  margin-left: 0.3rem;
+  transition: all 0.2s;
+}
+.info-icon:hover {
+  background: var(--accent3);
+  color: var(--bg);
+  transform: scale(1.1);
+}
+
+/* Estilos para los filtros */
+#filters {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.filter-group {
+  margin-bottom: 1rem;
+}
+.filter-group label {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.filter-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.75rem;
+  text-transform: none;
+  color: var(--text);
+  background: var(--surface2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.filter-options label:hover {
+  background: var(--border);
+}
+.filter-options input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 </style>
 </head>
 <body>
@@ -338,6 +410,8 @@
 </header>
 <div class="layout">
 <aside class="sidebar">
+  <div class="sidebar-section">Filtros</div>
+  <div id="filters"></div>
   <div class="sidebar-section">Personajes</div>
   <div id="char-nav"></div>
 </aside>
@@ -366,10 +440,10 @@ const EXPECTED_KEYS = [
   'sc_gameplay', 'sc_f2p_friendly', 'sc_consistencia',
   'nec_arma', 'nec_dupes', 'mejores_dupes', 'mejores_compas', 'mejor_bangbu',
   'w_engines', 'sets_discos', 'disco_slot4', 'disco_slot5', 'disco_slot6',
-  'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos',
-  'resumen'     // <-- NUEVO para emojis
+  'disco_sub', 'stats_basicas', 'stats_ideales', 'consejos', 'resumen'
 ];
 
+// Descripciones para los tooltips de puntuaciones
 const SCORE_LABELS = {
   sc_utilidad: 'Utilidad',
   sc_facilidad_build: 'Facilidad de Buildeo',
@@ -378,6 +452,16 @@ const SCORE_LABELS = {
   sc_gameplay: 'Facilidad de Gameplay',
   sc_f2p_friendly: 'F2P Friendly',
   sc_consistencia: 'Consistencia',
+};
+
+const SCORE_TOOLTIPS = {
+  sc_utilidad: 'Qué tan útil es hoy en día el personaje, qué tanto te ayuda en el juego en general.',
+  sc_facilidad_build: 'Qué fácil es llegar a unas estadísticas para que el personaje cumpla su función.',
+  sc_build_value: 'Qué tanto vale la pena sobreinvertir en este personaje.',
+  sc_pull_value: 'Qué tanto vale la pena tirar por este personaje (o sus dupes si es regalado).',
+  sc_gameplay: 'Qué tan fácil es dominar su gameplay para sacar puntuaciones decentes.',
+  sc_f2p_friendly: 'Qué tan amigable es con cuentas con pocas armas rango S, pocos personajes rango S y casi sin dupes.',
+  sc_consistencia: 'Qué tan consistente es en sus rotaciones y si se basa mucho en RNG o situaciones específicas para brillar.',
 };
 
 const NEC_LEVELS = ['Nada', 'Poca', 'Media', 'Mucha', 'Obligatoria'];
@@ -412,14 +496,13 @@ const EMOJI_DESCRIPTIONS = {
 };
 
 // ══════════════════════════════════════════════════════════
-// FETCH DATOS (usando CSV para evitar problemas de tipos)
+// FETCH DATOS (CSV)
 // ══════════════════════════════════════════════════════════
 async function fetchSheetData() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_CONFIG.sheetName)}`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const csvText = await resp.text();
-  
   const rows = [];
   const lines = csvText.split(/\r?\n/);
   for (const line of lines) {
@@ -429,14 +512,9 @@ async function fetchSheetData() {
     let current = '';
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      if (ch === '"') {
-        inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        cells.push(current.trim());
-        current = '';
-      } else {
-        current += ch;
-      }
+      if (ch === '"') inQuote = !inQuote;
+      else if (ch === ',' && !inQuote) { cells.push(current.trim()); current = ''; }
+      else current += ch;
     }
     cells.push(current.trim());
     rows.push(cells);
@@ -450,29 +528,21 @@ function buildCharacters(rows) {
   const colIndexToKey = {};
   for (let i = 0; i < headers.length; i++) {
     const header = headers[i] ? headers[i].toLowerCase().trim() : '';
-    if (EXPECTED_KEYS.includes(header)) {
-      colIndexToKey[i] = header;
-    }
+    if (EXPECTED_KEYS.includes(header)) colIndexToKey[i] = header;
   }
   const nombreIndex = Object.keys(colIndexToKey).find(idx => colIndexToKey[idx] === 'nombre');
-  if (nombreIndex === undefined) {
-    throw new Error('No se encontró la columna "nombre" en la primera fila.');
-  }
-  
+  if (nombreIndex === undefined) throw new Error('No se encontró la columna "nombre" en la primera fila.');
   const characters = [];
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length === 0) continue;
     const charObj = {};
     for (const colIdx in colIndexToKey) {
-      const key = colIndexToKey[colIdx];
       let value = row[colIdx] !== undefined ? row[colIdx] : '';
       value = value.replace(/^"|"$/g, '');
-      charObj[key] = value;
+      charObj[colIndexToKey[colIdx]] = value;
     }
-    if (charObj.nombre && charObj.nombre.trim() !== '') {
-      characters.push(charObj);
-    }
+    if (charObj.nombre && charObj.nombre.trim() !== '') characters.push(charObj);
   }
   return characters;
 }
@@ -521,50 +591,143 @@ function renderEmojis(str) {
 }
 
 // ══════════════════════════════════════════════════════════
-// RENDER (sidebar y personaje)
+// FILTROS Y BÚSQUEDA
 // ══════════════════════════════════════════════════════════
 let allChars = [];
 let activeIdx = -1;
+let currentSearchTerm = '';
+let selectedElements = new Set();
+let selectedRarities = new Set();
+let selectedRoles = new Set();
 
+function getUniqueValues(prop) {
+  return [...new Set(allChars.map(c => c[prop]).filter(v => v && v.trim() !== ''))];
+}
+
+function renderFilters() {
+  const container = document.getElementById('filters');
+  if (!container) return;
+  const elements = getUniqueValues('elemento');
+  const rarities = getUniqueValues('rareza');
+  const roles = getUniqueValues('rol');
+  let html = '';
+  if (elements.length) {
+    html += `<div class="filter-group"><label>Elemento</label><div class="filter-options">`;
+    elements.forEach(el => {
+      html += `<label><input type="checkbox" value="${el}" class="filter-element" ${selectedElements.has(el) ? 'checked' : ''}> ${el}</label>`;
+    });
+    html += `</div></div>`;
+  }
+  if (rarities.length) {
+    html += `<div class="filter-group"><label>Rango</label><div class="filter-options">`;
+    rarities.forEach(r => {
+      html += `<label><input type="checkbox" value="${r}" class="filter-rarity" ${selectedRarities.has(r) ? 'checked' : ''}> ${r}</label>`;
+    });
+    html += `</div></div>`;
+  }
+  if (roles.length) {
+    html += `<div class="filter-group"><label>Rol</label><div class="filter-options">`;
+    roles.forEach(r => {
+      html += `<label><input type="checkbox" value="${r}" class="filter-role" ${selectedRoles.has(r) ? 'checked' : ''}> ${r}</label>`;
+    });
+    html += `</div></div>`;
+  }
+  container.innerHTML = html;
+  // Attach event listeners
+  document.querySelectorAll('.filter-element').forEach(cb => cb.addEventListener('change', () => {
+    if (cb.checked) selectedElements.add(cb.value);
+    else selectedElements.delete(cb.value);
+    updateFilteredList();
+  }));
+  document.querySelectorAll('.filter-rarity').forEach(cb => cb.addEventListener('change', () => {
+    if (cb.checked) selectedRarities.add(cb.value);
+    else selectedRarities.delete(cb.value);
+    updateFilteredList();
+  }));
+  document.querySelectorAll('.filter-role').forEach(cb => cb.addEventListener('change', () => {
+    if (cb.checked) selectedRoles.add(cb.value);
+    else selectedRoles.delete(cb.value);
+    updateFilteredList();
+  }));
+}
+
+function filterCharacters() {
+  return allChars.filter(char => {
+    // Filtro búsqueda
+    if (currentSearchTerm && !char.nombre.toLowerCase().includes(currentSearchTerm)) return false;
+    // Filtro elemento
+    if (selectedElements.size && !selectedElements.has(char.elemento)) return false;
+    // Filtro rareza
+    if (selectedRarities.size && !selectedRarities.has(char.rareza)) return false;
+    // Filtro rol
+    if (selectedRoles.size && !selectedRoles.has(char.rol)) return false;
+    return true;
+  });
+}
+
+function updateFilteredList() {
+  const filtered = filterCharacters();
+  renderSidebar(filtered);
+  // Si el personaje activo ya no está en los filtrados, seleccionar el primero si existe
+  if (activeIdx !== -1 && !filtered.includes(allChars[activeIdx])) {
+    if (filtered.length > 0) {
+      const newActive = allChars.indexOf(filtered[0]);
+      selectChar(newActive);
+    } else {
+      activeIdx = -1;
+      renderWelcome([]);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER (sidebar y personaje)
+// ══════════════════════════════════════════════════════════
 function renderSidebar(chars) {
   const nav = document.getElementById('char-nav');
   nav.innerHTML = '';
   chars.forEach((c, i) => {
     const avg = calcPromedio(c);
-    const item = document.createElement('div');
-    item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
-    // Clase de rareza para el borde de la imagen
     const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
+    const item = document.createElement('div');
+    item.className = 'char-nav-item' + (allChars.indexOf(c) === activeIdx ? ' active' : '');
     item.innerHTML = `
       <img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar ${rarezaClass}" onerror="this.style.display='none'">
       <span>${c.nombre}</span>
       ${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}
     `;
-    item.addEventListener('click', () => selectChar(i));
+    item.addEventListener('click', () => selectChar(allChars.indexOf(c)));
     nav.appendChild(item);
   });
 }
 
 function selectChar(idx) {
+  if (idx < 0 || idx >= allChars.length) return;
   activeIdx = idx;
-  renderSidebar(allChars);
+  const filtered = filterCharacters();
+  renderSidebar(filtered);
   renderChar(allChars[idx]);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Cerrar menú móvil al seleccionar personaje
-  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
-    closeMenu();
-  }
+  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) closeMenu();
 }
 
 function renderChar(c) {
   const avg = calcPromedio(c);
   const main = document.getElementById('main-content');
-
+  // Generar filas de puntuaciones con tooltips
   const scoreRows = Object.entries(SCORE_LABELS).map(([key, label]) => {
     let val = parseFloat(c[key]);
     if (isNaN(val)) val = 0;
     const pct = (val / 10) * 100;
-    return `<div class="rank-row ${val === 0 ? 'zero' : ''}"><div class="rank-label">${label}</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div><div class="rank-value">${val > 0 ? val : '—'}</div></div>`;
+    const tooltip = SCORE_TOOLTIPS[key] || '';
+    return `<div class="rank-row ${val === 0 ? 'zero' : ''}">
+              <div class="rank-label">
+                ${label}
+                <span class="info-icon" title="${tooltip}">ⓘ</span>
+              </div>
+              <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+              <div class="rank-value">${val > 0 ? val : '—'}</div>
+            </div>`;
   }).join('');
 
   const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
@@ -601,7 +764,6 @@ function renderChar(c) {
     c.faccion  && `<span class="tag tag-faction">${c.faccion}</span>`,
   ].filter(Boolean).join('');
 
-  // Clase de rareza para el avatar grande
   const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
 
   main.innerHTML = `
@@ -668,7 +830,7 @@ function renderError(msg) {
 }
 
 // ══════════════════════════════════════════════════════════
-// MENÚ MÓVIL (sin duplicados)
+// MENÚ MÓVIL
 // ══════════════════════════════════════════════════════════
 let sidebar;
 let overlay;
@@ -689,7 +851,6 @@ function initMobileMenu() {
   sidebar = document.querySelector('.sidebar');
   overlay = document.getElementById('menu-overlay');
   if (!menuToggle || !sidebar || !overlay) return;
-  
   menuToggle.addEventListener('click', (e) => {
     e.stopPropagation();
     if (sidebar.classList.contains('open')) closeMenu();
@@ -708,20 +869,8 @@ function setupSearch() {
   const searchInput = document.getElementById('search-input');
   if (!searchInput) return;
   searchInput.addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    const filtered = q ? allChars.filter(c => c.nombre.toLowerCase().includes(q)) : allChars;
-    const nav = document.getElementById('char-nav');
-    nav.innerHTML = '';
-    filtered.forEach(c => {
-      const i = allChars.indexOf(c);
-      const avg = calcPromedio(c);
-      const rarezaClass = c.rareza ? `rareza-${c.rareza.toLowerCase()}` : '';
-      const item = document.createElement('div');
-      item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
-      item.innerHTML = `<img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar ${rarezaClass}" onerror="this.style.display='none'"><span>${c.nombre}</span>${avg ? `<span class="nav-rank-badge ${getScoreClass(avg)}">${avg}</span>` : ''}`;
-      item.addEventListener('click', () => selectChar(i));
-      nav.appendChild(item);
-    });
+    currentSearchTerm = this.value.toLowerCase().trim();
+    updateFilteredList();
   });
 }
 
@@ -738,6 +887,7 @@ async function init() {
       renderError('No se encontraron personajes. Asegúrate de que la primera fila tenga los encabezados.');
       return;
     }
+    renderFilters();      // Generar los filtros dinámicos
     renderSidebar(allChars);
     renderWelcome(allChars);
     initMobileMenu();
@@ -751,6 +901,5 @@ async function init() {
 
 init();
 </script>
-
 </body>
 </html>
