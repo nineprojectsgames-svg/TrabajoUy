@@ -672,6 +672,7 @@ async function fetchSheetData() {
   const text = await resp.text();
   const json = JSON.parse(text.slice(47, -2));
   
+  // Convertir cada celda a string, incluyendo números
   const rows = json.table.rows.map(row =>
     row.c.map(cell => {
       if (cell === null || cell === undefined) return '';
@@ -683,46 +684,25 @@ async function fetchSheetData() {
 }
 
 function buildCharacters(rows) {
-  if (rows.length < 2) return [];
+  // Asumimos que la columna A (índice 0) contiene las claves en el orden de EXPECTED_KEYS,
+  // y que las columnas B, C, D... son los personajes.
+  if (rows.length < EXPECTED_KEYS.length) return [];
   
-  // Buscar la fila que contiene la clave 'nombre' en la columna 0
-  let nombreRowIndex = -1;
-  for (let i = 0; i < rows.length; i++) {
-    if (rows[i][0] && rows[i][0].toLowerCase() === 'nombre') {
-      nombreRowIndex = i;
-      break;
-    }
-  }
-  if (nombreRowIndex === -1) {
-    throw new Error('No se encontró la fila con la clave "nombre" en la columna A.');
-  }
-  
-  // Mapa clave -> fila
-  const keyToRowMap = {};
-  for (let i = nombreRowIndex; i < rows.length; i++) {
-    const key = rows[i][0] ? rows[i][0].toLowerCase().trim() : '';
-    if (key && EXPECTED_KEYS.includes(key)) {
-      keyToRowMap[key] = i;
-    }
-  }
-  
-  // Determinar número de personajes (columnas desde 1 hasta el final)
+  // Determinar el número de personajes (columnas) basado en la fila más larga
   let maxCols = 0;
-  for (let i = nombreRowIndex; i < rows.length; i++) {
+  for (let i = 0; i < EXPECTED_KEYS.length && i < rows.length; i++) {
     if (rows[i].length > maxCols) maxCols = rows[i].length;
   }
-  const numChars = maxCols - 1;
+  const numChars = maxCols - 1; // restar columna A
+  if (numChars <= 0) return [];
   
   const characters = [];
   for (let col = 1; col <= numChars; col++) {
     const charObj = {};
-    for (const key of EXPECTED_KEYS) {
-      const rowIdx = keyToRowMap[key];
-      if (rowIdx !== undefined && rows[rowIdx] && rows[rowIdx][col] !== undefined) {
-        charObj[key] = rows[rowIdx][col];
-      } else {
-        charObj[key] = '';
-      }
+    for (let keyIdx = 0; keyIdx < EXPECTED_KEYS.length; keyIdx++) {
+      const key = EXPECTED_KEYS[keyIdx];
+      const value = (keyIdx < rows.length && rows[keyIdx][col] !== undefined) ? rows[keyIdx][col] : '';
+      charObj[key] = value;
     }
     if (charObj.nombre && charObj.nombre.trim() !== '') {
       characters.push(charObj);
