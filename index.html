@@ -231,6 +231,16 @@
   }
 }
 
+/* Bordes para rareza */
+.char-avatar.rareza-a {
+  border-color: #aa66ff;  /* Violeta */
+  box-shadow: 0 0 12px rgba(170, 102, 255, 0.5);
+}
+.char-avatar.rareza-s {
+  border-color: #f5c400;  /* Dorado */
+  box-shadow: 0 0 12px rgba(245, 196, 0, 0.6);
+}
+
 </style>
 </head>
 <body>
@@ -442,7 +452,7 @@ function renderSidebar(chars) {
     const item = document.createElement('div');
     item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
     item.innerHTML = `
-      <img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'">
+      <img src="${c.imagen || ''}" alt="${c.nombre}" class="char-avatar rareza-${c.rareza ? c.rareza.toLowerCase() : ''}" onerror="this.style.display='none'">
       <span>${c.nombre}</span>
       ${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}
     `;
@@ -506,7 +516,7 @@ function renderChar(c) {
   main.innerHTML = `
   <div class="char-card">
     <div class="char-header">
-      <img class="char-avatar" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
+ <img class="char-avatar rareza-${c.rareza ? c.rareza.toLowerCase() : ''}" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
       <div class="char-info">
   <div class="char-name">${c.nombre}</div>
   <div class="char-emojis" style="margin: 0.3rem 0;">${renderEmojis(c.resumen)}</div>
