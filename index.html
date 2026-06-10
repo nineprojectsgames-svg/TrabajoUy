@@ -151,17 +151,78 @@
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
   @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .span-2 { grid-column: span 1; }
-    main { padding: 1rem; }
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: -260px;
+    width: 260px;
+    height: calc(100vh - 60px);
+    background: var(--surface);
+    transition: left 0.3s ease;
+    z-index: 1000;
+    border-right: 1px solid var(--border);
   }
+  .sidebar.open {
+    left: 0;
+  }
+  #menu-toggle {
+    display: block !important;
+  }
+  main {
+    padding: 1rem;
+    width: 100%;
+  }
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .span-2 {
+    grid-column: span 1;
+  }
+  .char-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .char-name {
+    font-size: 1.5rem;
+  }
+  .char-score-big {
+    font-size: 2rem;
+  }
+  .char-avatar {
+    width: 64px;
+    height: 64px;
+  }
+  .rank-label {
+    width: 140px;
+    font-size: 0.7rem;
+  }
+  .rank-value {
+    font-size: 0.7rem;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-numbers {
+    grid-template-columns: 1fr 1fr;
+  }
+  .weapon-item {
+    font-size: 0.75rem;
+  }
+  .panel-title {
+    font-size: 0.6rem;
+  }
+  .tag {
+    font-size: 0.6rem;
+  }
+}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">ZZZ<span>WIKI</span></div>
   <div class="header-game">ZENLESS ZONE ZERO — BUILDS</div>
+  <button id="menu-toggle" style="background:none; border:none; color:var(--accent); font-size:1.6rem; cursor:pointer; display:none;">☰</button>
   <div class="header-right">
     <input type="text" id="search-input" placeholder="Buscar personaje…" />
     <div class="status-dot loading" id="status-dot" title="Cargando datos…"></div>
@@ -483,5 +544,21 @@ async function init() {
 
 init();
 </script>
+
+<script>
+  // Menú hamburguesa para móvil
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+    // Cerrar menú al hacer clic en un personaje
+    document.getElementById('char-nav')?.addEventListener('click', () => {
+      if (window.innerWidth <= 768) sidebar.classList.remove('open');
+    });
+  }
+</script>
+
 </body>
 </html>
