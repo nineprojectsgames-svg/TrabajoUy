@@ -612,20 +612,16 @@
 
 <script>
 // ══════════════════════════════════════════════════════════
-// CONFIGURACIÓN — pegá acá el ID de tu Google Sheet
+// CONFIGURACIÓN
 // ══════════════════════════════════════════════════════════
 const SHEET_CONFIG = {
-  // Reemplazá con el ID de tu Google Spreadsheet
-  // Lo encontrás en la URL: docs.google.com/spreadsheets/d/[ESTE_ID]/edit
   sheetId: '1hvggH2H5F27AyvaQnZs9CAPu6V78TZBa2SKq445Jad8',
-
-  // Nombre de la hoja (pestaña) con builds de Zenless Zone Zero
-  // Por defecto "Zenless Builds" — cambialo si le pusiste otro nombre
   sheetName: 'Zenless Builds',
 };
 
-// Mapa de filas: qué guarda cada fila (empezando desde B2 = fila 0)
-const ROW_KEYS = [
+// Claves que esperamos leer desde la columna A
+// Deben coincidir EXACTAMENTE con el texto que hay en tu hoja (sin espacios adicionales)
+const EXPECTED_KEYS = [
   'nombre',
   'imagen',
   'faccion',
@@ -668,7 +664,7 @@ const SCORE_LABELS = {
 const NEC_LEVELS = ['Nada','Poca','Media','Mucha','Obligatoria'];
 
 // ══════════════════════════════════════════════════════════
-// FETCH + PARSE
+// FETCH + PARSE (inteligente por clave)
 // ══════════════════════════════════════════════════════════
 async function fetchSheetData() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_CONFIG.sheetName)}&tq=select%20*`;
@@ -676,48 +672,68 @@ async function fetchSheetData() {
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const text = await resp.text();
   const json = JSON.parse(text.slice(47, -2));
-
-  // Recuperar también los headers que Google separa
-  const headers = json.table.cols.map(col => col.label || '');
+  
+  // Extraer todas las filas como arrays de strings
   const rows = json.table.rows.map(row =>
-    row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v) : '')
+    row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v).trim() : '')
   );
-
-  return [headers, ...rows];
+  return rows;
 }
 
-function buildCharacters(rows) {
-  // rows[0] = array de nombres de columnas (A, B, C...)
-  // rows[1] = primera fila de la hoja (encabezados: "Nombre", "Imagen", ...)
-  // rows[2] = segunda fila de la hoja (primer personaje)
-  // rows[3] = tercera fila (segundo personaje), etc.
-
-  if (rows.length < 3) return [];
-
-  // Eliminar el array de headers de columnas
-  const sheetRows = rows.slice(1);
+function buildCharacters(allRows) {
+  if (!allRows.length) return [];
   
-  // Eliminar la PRIMERA FILA de la hoja (encabezados "Nombre", "Imagen", etc.)
-  const dataRows = sheetRows.slice(1);
-
-  // Número de personajes = columnas desde B hasta el final
-  const numChars = Math.max(...dataRows.map(r => r.length)) - 1;
-  if (numChars <= 0) return [];
-
-  const chars = [];
-  for (let col = 1; col <= numChars; col++) {
-    const char = {};
-    ROW_KEYS.forEach((key, i) => {
-      const row = dataRows[i];
-      char[key] = row ? (row[col] || '').trim() : '';
-    });
-    if (char.nombre && char.nombre.trim()) chars.push(char);
+  // Asumimos que la primera columna (col 0) contiene las claves (atributos)
+  // y que la primera fila (fila 0) son los encabezados de columna (A, B, C...)
+  // pero realmente los datos empiezan desde fila 0? Necesitamos identificar dónde está la fila de claves.
+  // Normalmente la fila 1 (índice 0) es "A: campo", "B: personaje1", "C: personaje2"...
+  // Pero como el usuario puede tener filas vacías arriba, buscaremos la primera fila donde la columna A tenga 'nombre'.
+  
+  let startRow = -1;
+  for (let i = 0; i < allRows.length; i++) {
+    if (allRows[i][0] && allRows[i][0].toLowerCase() === 'nombre') {
+      startRow = i;
+      break;
+    }
   }
-  return chars;
+  if (startRow === -1) throw new Error('No se encontró la fila con la clave "nombre" en columna A');
+  
+  // Ahora, desde startRow hasta abajo, construimos un mapa clave -> número de fila
+  const keyRowIndex = startRow;
+  const keyToValueRow = {}; // clave -> índice de fila donde está esa clave
+  for (let i = keyRowIndex; i < allRows.length; i++) {
+    const key = allRows[i][0] ? allRows[i][0].toLowerCase().trim() : '';
+    if (key && EXPECTED_KEYS.includes(key)) {
+      keyToValueRow[key] = i;
+    }
+  }
+  
+  // Determinar cuántos personajes hay: columnas desde 1 hasta la última no vacía en la fila de claves
+  const maxCols = allRows[keyRowIndex].length;
+  const numChars = maxCols - 1; // columna 0 es la clave
+  
+  const characters = [];
+  for (let col = 1; col <= numChars; col++) {
+    const charObj = {};
+    for (const key of EXPECTED_KEYS) {
+      const rowIdx = keyToValueRow[key];
+      if (rowIdx !== undefined && allRows[rowIdx] && allRows[rowIdx][col]) {
+        charObj[key] = allRows[rowIdx][col];
+      } else {
+        charObj[key] = '';
+      }
+    }
+    // Si el personaje tiene nombre, lo agregamos
+    if (charObj.nombre && charObj.nombre.trim()) {
+      characters.push(charObj);
+    }
+  }
+  
+  return characters;
 }
 
 // ══════════════════════════════════════════════════════════
-// UTILITIES
+// UTILITIES (sin cambios)
 // ══════════════════════════════════════════════════════════
 function calcPromedio(char) {
   const scores = Object.keys(SCORE_LABELS).map(k => parseFloat(char[k]) || 0);
@@ -736,10 +752,8 @@ function splitPipe(str) {
   return str.split('|').map(s => s.trim()).filter(Boolean);
 }
 
-function empty(v) { return !v || !v.trim(); }
-
 // ══════════════════════════════════════════════════════════
-// RENDER
+// RENDER (igual que antes, pero sin cambios visuales)
 // ══════════════════════════════════════════════════════════
 let allChars = [];
 let activeIdx = -1;
@@ -829,7 +843,6 @@ function renderChar(c) {
     ? dupes.map(d => `<div class="dupe-item">${d}</div>`).join('')
     : '<span class="empty-val">Sin datos</span>';
 
-  // Stats básicas / ideales
   function renderStats(str, ideal = false) {
     const items = splitPipe(str);
     if (!items.length) return '<span class="empty-val">Sin datos</span>';
@@ -842,19 +855,16 @@ function renderChar(c) {
     }).join('') + '</div>';
   }
 
-  // Consejos
   const tips = splitPipe(c.consejos);
   const tipsHTML = tips.length
     ? tips.map(t => `<div class="tip-item"><span class="tip-bullet">◆</span><span>${t}</span></div>`).join('')
     : '<div class="tip-item"><span class="tip-bullet">◆</span><span class="empty-val">Sin datos</span></div>';
 
-  // Substats
   const subs = (c.disco_sub || '').split(',').map(s => s.trim()).filter(Boolean);
   const subsHTML = subs.length
     ? `<div class="substats-list">${subs.map(s => `<span class="substat-chip">${s}</span>`).join('')}</div>`
     : '';
 
-  // Tags
   const tags = [
     c.rareza   && `<span class="tag tag-rarity">${c.rareza}</span>`,
     c.elemento && `<span class="tag tag-element">${c.elemento}</span>`,
@@ -864,11 +874,8 @@ function renderChar(c) {
 
   main.innerHTML = `
   <div class="char-card">
-
-    <!-- HEADER -->
     <div class="char-header">
-      <img class="char-avatar" src="${c.imagen||''}" alt="${c.nombre}"
-           onerror="this.style.display='none'">
+      <img class="char-avatar" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
       <div class="char-info">
         <div class="char-name">${c.nombre}</div>
         <div class="char-tags">${tags}</div>
@@ -876,7 +883,6 @@ function renderChar(c) {
       ${avg ? `<div class="char-score-big">${avg}<div class="score-label">/ 10</div></div>` : ''}
     </div>
 
-    <!-- SCORES + NECESIDADES -->
     <div class="grid-2">
       <div class="panel">
         <div class="panel-title">Puntuaciones</div>
@@ -902,7 +908,6 @@ function renderChar(c) {
       </div>
     </div>
 
-    <!-- EQUIPO -->
     <div class="grid-2">
       <div class="panel">
         <div class="panel-title">Mejores Compañeros</div>
@@ -914,7 +919,6 @@ function renderChar(c) {
       </div>
     </div>
 
-    <!-- W-ENGINES + DISCOS -->
     <div class="grid-2">
       <div class="panel">
         <div class="panel-title">W-Engines</div>
@@ -926,51 +930,24 @@ function renderChar(c) {
       </div>
     </div>
 
-    <!-- STATS DISCOS -->
     <div class="panel" style="margin-bottom:1.2rem">
       <div class="panel-title">Stats de Discos</div>
       <div class="stats-grid">
-        <div class="stat-cell">
-          <div class="slot-label">SLOT 4</div>
-          <div class="stat-name">${c.disco_slot4||'—'}</div>
-        </div>
-        <div class="stat-cell">
-          <div class="slot-label">SLOT 5</div>
-          <div class="stat-name">${c.disco_slot5||'—'}</div>
-        </div>
-        <div class="stat-cell">
-          <div class="slot-label">SLOT 6</div>
-          <div class="stat-name">${c.disco_slot6||'—'}</div>
-        </div>
+        <div class="stat-cell"><div class="slot-label">SLOT 4</div><div class="stat-name">${c.disco_slot4||'—'}</div></div>
+        <div class="stat-cell"><div class="slot-label">SLOT 5</div><div class="stat-name">${c.disco_slot5||'—'}</div></div>
+        <div class="stat-cell"><div class="slot-label">SLOT 6</div><div class="stat-name">${c.disco_slot6||'—'}</div></div>
       </div>
-      ${subsHTML ? `
-        <div style="margin-top:.75rem">
-          <div class="info-key" style="margin-bottom:.3rem">SUBSTATS PRIORITARIAS</div>
-          ${subsHTML}
-        </div>` : ''}
+      ${subsHTML ? `<div style="margin-top:.75rem"><div class="info-key" style="margin-bottom:.3rem">SUBSTATS PRIORITARIAS</div>${subsHTML}</div>` : ''}
     </div>
 
-    <!-- STATS BÁSICAS / IDEALES -->
     <div class="grid-2">
-      <div class="panel">
-        <div class="panel-title">Stats Básicas</div>
-        ${renderStats(c.stats_basicas, false)}
-      </div>
-      <div class="panel">
-        <div class="panel-title">Stats Ideales</div>
-        ${renderStats(c.stats_ideales, true)}
-      </div>
+      <div class="panel"><div class="panel-title">Stats Básicas</div>${renderStats(c.stats_basicas, false)}</div>
+      <div class="panel"><div class="panel-title">Stats Ideales</div>${renderStats(c.stats_ideales, true)}</div>
     </div>
 
-    <!-- CONSEJOS -->
-    <div class="panel" style="margin-bottom:2rem">
-      <div class="panel-title">Consejos &amp; Habilidades</div>
-      ${tipsHTML}
-    </div>
-
+    <div class="panel" style="margin-bottom:2rem"><div class="panel-title">Consejos &amp; Habilidades</div>${tipsHTML}</div>
   </div>`;
 
-  // Animar barras después de render
   requestAnimationFrame(() => {
     document.querySelectorAll('.rank-bar-fill').forEach(el => {
       const w = el.style.width;
@@ -1000,7 +977,7 @@ function renderError(msg) {
       <h2>ERROR AL CARGAR</h2>
       <div>${msg}</div>
       <div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">
-        Verificá que el Sheet ID sea correcto y que la hoja esté publicada como CSV
+        Verificá que en la columna A exista exactamente la palabra <strong>nombre</strong> (minúsculas) y que las demás claves coincidan con EXPECTED_KEYS.
       </div>
     </div>`;
 }
@@ -1010,16 +987,10 @@ function renderError(msg) {
 // ══════════════════════════════════════════════════════════
 document.getElementById('search-input').addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
-  const filtered = q
-    ? allChars.filter(c => c.nombre.toLowerCase().includes(q))
-    : allChars;
-  renderSidebar_filtered(filtered);
-});
-
-function renderSidebar_filtered(chars) {
+  const filtered = q ? allChars.filter(c => c.nombre.toLowerCase().includes(q)) : allChars;
   const nav = document.getElementById('char-nav');
   nav.innerHTML = '';
-  chars.forEach(c => {
+  filtered.forEach(c => {
     const i = allChars.indexOf(c);
     const avg = calcPromedio(c);
     const item = document.createElement('div');
@@ -1032,7 +1003,7 @@ function renderSidebar_filtered(chars) {
     item.addEventListener('click', () => selectChar(i));
     nav.appendChild(item);
   });
-}
+});
 
 // ══════════════════════════════════════════════════════════
 // INIT
@@ -1042,13 +1013,11 @@ async function init() {
   try {
     const rows = await fetchSheetData();
     allChars = buildCharacters(rows);
-    dot.className = 'status-dot'; // verde = ok
-
+    dot.className = 'status-dot';
     if (!allChars.length) {
-      renderError('No se encontraron personajes. Verificá que la hoja tenga datos desde la fila 2 (encabezados) y fila 3 (primer personaje).');
+      renderError('No se encontraron personajes. Asegurate de que la columna A tenga la clave "nombre" y que las columnas siguientes contengan datos.');
       return;
     }
-
     renderSidebar(allChars);
     renderWelcome(allChars);
   } catch (err) {
