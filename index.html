@@ -220,7 +220,6 @@
 
 .emoji-badge {
   display: inline-block;
-  font-size: 1.1rem;
   transition: transform 0.1s;
 }
 .emoji-badge:hover {
@@ -228,7 +227,7 @@
 }
 @media (max-width: 768px) {
   .emoji-badge {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -308,7 +307,7 @@ const EMOJI_DESCRIPTIONS = {
   '🗡️': 'Alto daño con ataques básicos, cargados o rápidos',
   '⏳': 'Requiere mucho tiempo activo en campo',
   '🔁': 'Cambia rápido, poco tiempo en campo',
-  '🪞': 'Puede hacer parrys / contraataques',
+  '🤺': 'Puede hacer parrys / contraataques',
   '⚔️': 'Escala con ATAQUE',
   '❤️': 'Escala con VIDA máxima',
   '🔰': 'Escala con DEFENSA',
@@ -316,6 +315,16 @@ const EMOJI_DESCRIPTIONS = {
   '🎲': 'Escala con Probabilidad de Anomalía',
   '🔋': 'Escala con Recuperación de Energía'
 };
+
+function renderEmojis(str) {
+  if (!str) return '';
+  // Separar por espacios (los emojis los pondrás separados por espacio en la celda)
+  const emojis = str.split(/\s+/).filter(e => e.trim().length > 0);
+  return emojis.map(emoji => {
+    const description = EMOJI_DESCRIPTIONS[emoji] || 'Sin descripción';
+    return `<span class="emoji-badge" title="${description}" style="cursor:help; font-size:1.3rem; margin-right:0.3rem;">${emoji}</span>`;
+  }).join('');
+}
 
 // ══════════════════════════════════════════════════════════
 // FETCH DATOS (usando CSV para evitar problemas de tipos)
@@ -434,7 +443,7 @@ function renderSidebar(chars) {
     item.className = 'char-nav-item' + (i === activeIdx ? ' active' : '');
     item.innerHTML = `
       <img src="${c.imagen || ''}" alt="${c.nombre}" onerror="this.style.display='none'">
-      <span>${c.nombre} ${renderEmojis(c.resumen)}</span>
+      <span>${c.nombre}</span>
       ${avg ? `<span class="nav-rank-badge">${avg}</span>` : ''}
     `;
     item.addEventListener('click', () => selectChar(i));
@@ -499,9 +508,10 @@ function renderChar(c) {
     <div class="char-header">
       <img class="char-avatar" src="${c.imagen||''}" alt="${c.nombre}" onerror="this.style.display='none'">
       <div class="char-info">
-        <div class="char-name">${c.nombre}</div>
-        <div class="char-tags">${tags}</div>
-      </div>
+  <div class="char-name">${c.nombre}</div>
+  <div class="char-emojis" style="margin: 0.3rem 0;">${renderEmojis(c.resumen)}</div>
+  <div class="char-tags">${tags}</div>
+</div>
       ${avg ? `<div class="char-score-big">${avg}<div class="score-label">/ 10</div></div>` : ''}
     </div>
     <div class="grid-2">
