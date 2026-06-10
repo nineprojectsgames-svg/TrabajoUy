@@ -673,18 +673,15 @@ async function fetchSheetData() {
   const text = await resp.text();
   const json = JSON.parse(text.slice(47, -2));
   
-  // Convertir todas las celdas a string, manejando números y otros tipos
   const rows = json.table.rows.map(row =>
     row.c.map(cell => {
       if (cell === null || cell === undefined) return '';
       if (cell.v === null || cell.v === undefined) return '';
-      // Si es número, convertirlo a string (manteniendo el número como texto)
-      if (typeof cell.v === 'number') {
-        return cell.v.toString();
-      }
+      // Convertir TODO a string, incluyendo números y booleanos
       return String(cell.v).trim();
     })
   );
+  console.log('📊 Datos crudos de la hoja (primeras 3 filas):', rows.slice(0, 3));
   return rows;
 }
 
@@ -692,57 +689,51 @@ function buildCharacters(rows) {
   if (rows.length < 2) return [];
   
   const headers = rows[0];
+  console.log('📌 Encabezados encontrados:', headers);
+  
   const colIndexToKey = {};
   for (let i = 0; i < headers.length; i++) {
     let header = headers[i];
-    if (header === undefined || header === null) continue;
-    header = String(header).toLowerCase().trim();
-    if (header && COLUMN_KEYS.includes(header)) {
+    if (!header) continue;
+    header = header.toLowerCase().trim();
+    if (COLUMN_KEYS.includes(header)) {
       colIndexToKey[i] = header;
+      console.log(`✅ Columna ${i} (${headers[i]}) -> clave "${header}"`);
     }
   }
   
   const nombreIndex = Object.keys(colIndexToKey).find(idx => colIndexToKey[idx] === 'nombre');
   if (nombreIndex === undefined) {
-    throw new Error('No se encontró la columna "nombre" en los encabezados');
+    throw new Error('No se encontró la columna "nombre" en los encabezados. Revisa que la primera fila tenga exactamente "nombre" (minúsculas, sin espacios).');
   }
+  console.log(`🔍 Columna del nombre: índice ${nombreIndex}`);
   
   const characters = [];
   for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
     const row = rows[rowIdx];
-    if (!row) continue;
+    if (!row || row.length === 0) continue;
     
-    // Verificar si la fila está completamente vacía
-    let allEmpty = true;
-    for (let i = 0; i < row.length; i++) {
-      const cell = row[i];
-      if (cell !== undefined && cell !== null && String(cell).trim() !== '') {
-        allEmpty = false;
-        break;
-      }
-    }
-    if (allEmpty) continue;
+    // Saltar filas vacías
+    const hasData = row.some(cell => cell && cell.trim() !== '');
+    if (!hasData) continue;
     
     const charObj = {};
     for (let colIdx in colIndexToKey) {
       const key = colIndexToKey[colIdx];
-      let value = row[colIdx];
-      if (value === undefined || value === null) {
-        value = '';
-      } else if (typeof value === 'number') {
-        // Los números se convierten a string sin perder información
-        value = value.toString();
-      } else {
-        value = String(value).trim();
-      }
+      let value = row[colIdx] !== undefined ? row[colIdx] : '';
       charObj[key] = value;
     }
     
-    // Solo agregar si tiene nombre
+    console.log(`👤 Fila ${rowIdx} -> Nombre: "${charObj.nombre}"`, charObj);
+    
     if (charObj.nombre && charObj.nombre.trim() !== '') {
       characters.push(charObj);
+    } else {
+      console.warn(`⚠️ Fila ${rowIdx} omitida porque el nombre está vacío o no se encontró.`);
     }
   }
+  
+  console.log(`🎯 Total personajes cargados: ${characters.length}`, characters.map(c => c.nombre));
   return characters;
 }
 
