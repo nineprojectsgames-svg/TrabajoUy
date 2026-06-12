@@ -1048,54 +1048,63 @@ const setsHTML = setsRaw.length ? setsRaw.map((block, blockIdx) => {
   return `<div class="disk-set" style="display: flex; gap: 1rem; align-items: center; justify-content: space-around;">${partsHtml}</div>`;
 }).join('') : '<span class="empty-val">Sin datos</span>';
 
-const compas = splitPipe(c.mejores_compas);
-const compasHTML = compas.length ? compas.map(s => {
-  let name = s.trim();
-  let reasonText = '';
-  
-  // Si NO es una URL, intentar separar por el primer guión
-  if (!isImageUrl(name)) {
-    const hyphenIndex = name.indexOf('-');
-    if (hyphenIndex !== -1) {
-      reasonText = name.substring(hyphenIndex + 1).trim();
-      name = name.substring(0, hyphenIndex).trim();
+// Mejores Compañeros con soporte para | (separador de compañeros) y > (prioridad dentro de cada compañero)
+const rawCompanions = c.mejores_compas ? c.mejores_compas.split('|').map(s => s.trim()).filter(Boolean) : [];
+const compasHTML = rawCompanions.length ? rawCompanions.map(companionChain => {
+  // Dividir por > para obtener las opciones en orden de prioridad
+  const options = companionChain.split('>').map(s => s.trim()).filter(Boolean);
+  const optionsHtml = options.map((opt, idx) => {
+    let name = opt;
+    let reasonText = '';
+    
+    // Si no es URL, separar por primer guión para razón
+    if (!isImageUrl(name)) {
+      const hyphenIndex = name.indexOf('-');
+      if (hyphenIndex !== -1) {
+        reasonText = name.substring(hyphenIndex + 1).trim();
+        name = name.substring(0, hyphenIndex).trim();
+      }
     }
-  }
+    
+    let imageHtml = '';
+    let displayName = name;
+    if (isImageUrl(name)) {
+      const safeName = name.replace(/"/g, '&quot;');
+      imageHtml = `<img src="${name}" alt="compañero" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.3rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
+      displayName = '';
+    }
+    
+    // Mostrar imagen/texto y razón
+    let html = `<span style="display: inline-flex; align-items: center; gap: 0.2rem;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></span>`;
+    return html;
+  }).join(' <span style="color: var(--accent2); font-weight: bold;">→</span> ');
   
-  let imageHtml = '';
-  let displayName = name;
-  if (isImageUrl(name)) {
-    // Guardamos el texto original para el caso de error de carga
-    const safeName = name.replace(/"/g, '&quot;');
-    imageHtml = `<img src="${name}" alt="compañero" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
-    displayName = '';
-  }
-  
-  return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></div></div>`;
+  return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">${optionsHtml}</div></div>`;
 }).join('') : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
-const bangbus = splitPipe(c.mejor_bangbu);
-const bangbuHTML = bangbus.length ? bangbus.map(s => {
-  let name = s.trim();
-  let reasonText = '';
-  
-  if (!isImageUrl(name)) {
-    const hyphenIndex = name.indexOf('-');
-    if (hyphenIndex !== -1) {
-      reasonText = name.substring(hyphenIndex + 1).trim();
-      name = name.substring(0, hyphenIndex).trim();
+const rawBangbus = c.mejor_bangbu ? c.mejor_bangbu.split('|').map(s => s.trim()).filter(Boolean) : [];
+const bangbuHTML = rawBangbus.length ? rawBangbus.map(bangbuChain => {
+  const options = bangbuChain.split('>').map(s => s.trim()).filter(Boolean);
+  const optionsHtml = options.map((opt, idx) => {
+    let name = opt;
+    let reasonText = '';
+    if (!isImageUrl(name)) {
+      const hyphenIndex = name.indexOf('-');
+      if (hyphenIndex !== -1) {
+        reasonText = name.substring(hyphenIndex + 1).trim();
+        name = name.substring(0, hyphenIndex).trim();
+      }
     }
-  }
-  
-  let imageHtml = '';
-  let displayName = name;
-  if (isImageUrl(name)) {
-    const safeName = name.replace(/"/g, '&quot;');
-    imageHtml = `<img src="${name}" alt="bangbu" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
-    displayName = '';
-  }
-  
-  return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></div></div>`;
+    let imageHtml = '';
+    let displayName = name;
+    if (isImageUrl(name)) {
+      const safeName = name.replace(/"/g, '&quot;');
+      imageHtml = `<img src="${name}" alt="bangbu" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.3rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
+      displayName = '';
+    }
+    return `<span style="display: inline-flex; align-items: center; gap: 0.2rem;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></span>`;
+  }).join(' <span style="color: var(--accent2); font-weight: bold;">→</span> ');
+  return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">${optionsHtml}</div></div>`;
 }).join('') : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
   const dupes = splitPipe(c.mejores_dupes);
