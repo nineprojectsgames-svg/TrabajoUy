@@ -949,12 +949,13 @@ function selectChar(idx) {
   renderSidebar(filtered);
   renderChar(allChars[idx]);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-if (window.innerWidth <= 768) {
-  const sidebarElem = document.querySelector('.sidebar');
-  if (sidebarElem && sidebarElem.classList.contains('open')) {
-    if (typeof closeMenu === 'function') closeMenu();
+  if (window.innerWidth <= 768) {
+    const sidebarElem = document.querySelector('.sidebar');
+    if (sidebarElem && sidebarElem.classList.contains('open')) {
+      if (typeof closeMenu === 'function') closeMenu();
+    }
   }
-}
+}  // <--- CIERRE CORRECTO DE selectChar
 
 function renderChar(c) {
   const avg = calcPromedio(c);
