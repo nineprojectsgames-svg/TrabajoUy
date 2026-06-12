@@ -1000,28 +1000,52 @@ const engineHTML = engines.length ? engines.map((e, i) => {
 }).join('') : '<span class="empty-val">Sin datos</span>';
 
 const setsRaw = (c.sets_discos || '').split('>').map(s => s.trim()).filter(Boolean);
-const setsHTML = setsRaw.length ? setsRaw.map((set, idx) => {
-  // Extraer número de piezas al inicio (ej: "4 https://..." o "2 Chaos Jazz")
-  let pieceCount = '';
-  let content = set;
-  const pieceMatch = set.match(/^(\d+)\s+(.+)$/);
-  if (pieceMatch) {
-    pieceCount = pieceMatch[1];
-    content = pieceMatch[2].trim();
-  }
-  let innerHtml = '';
-  if (isImageUrl(content)) {
-    const safeUrl = content.replace(/"/g, '&quot;');
-    innerHtml = `<div style="display: flex; flex-direction: column; align-items: center;">
-      <img src="${content}" alt="set disco" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2);" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';" data-text="${safeUrl}">
-      ${pieceCount ? `<span style="font-size: 0.65rem; margin-top: 0.2rem;">${pieceCount}p</span>` : ''}
-    </div>`;
+const setsHTML = setsRaw.length ? setsRaw.map((block, blockIdx) => {
+  // Dentro de cada bloque, separamos las dos partes: 4p y 2p
+  // El formato esperado es: "4 [set1] 2 [set2]" o también podría ser "4 [set1] 2 [set2]" con URLs o textos
+  // Usamos una expresión regular para encontrar números al inicio de cada parte
+  const parts = [];
+  let remaining = block;
+  // Buscar patrones como "4 " luego cualquier cosa hasta el siguiente " 2 " o hasta el final
+  const match4 = remaining.match(/^(\d+)\s+(.+?)(?=\s+\d+\s+|$)/);
+  if (match4) {
+    const count4 = match4[1];
+    let content4 = match4[2].trim();
+    remaining = remaining.substring(match4[0].length).trim();
+    // Ahora buscar "2 " y el resto
+    const match2 = remaining.match(/^(\d+)\s+(.+)$/);
+    if (match2) {
+      const count2 = match2[1];
+      let content2 = match2[2].trim();
+      parts.push({ count: count4, content: content4 });
+      parts.push({ count: count2, content: content2 });
+    } else {
+      // Si no hay segundo número, asumimos que solo hay un set (caso poco común pero posible)
+      parts.push({ count: count4, content: content4 });
+    }
   } else {
-    // Texto normal: mostramos el número de piezas (o el índice de prioridad si no hay piezas)
-    const displayNumber = pieceCount || (idx+1).toString();
-    innerHtml = `<span class="rank-num">${displayNumber}</span>${content}`;
+    // Si no hay números al inicio, tratamos el bloque completo como un solo set (para compatibilidad)
+    parts.push({ count: (blockIdx+1).toString(), content: block });
   }
-  return `<div class="disk-set">${innerHtml}</div>`;
+  
+  // Generar HTML para cada parte
+  const partsHtml = parts.map(part => {
+    const { count, content } = part;
+    let innerHtml = '';
+    if (isImageUrl(content)) {
+      const safeUrl = content.replace(/"/g, '&quot;');
+      innerHtml = `<div style="display: flex; flex-direction: column; align-items: center;">
+        <img src="${content}" alt="set disco" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2);" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';" data-text="${safeUrl}">
+        <span style="font-size: 0.65rem; margin-top: 0.2rem;">${count}p</span>
+      </div>`;
+    } else {
+      innerHtml = `<span class="rank-num">${count}</span><span>${content}</span>`;
+    }
+    return innerHtml;
+  }).join('');
+  
+  // Envolver la combinación en un div con clase disk-set (para mantener estilo)
+  return `<div class="disk-set" style="display: flex; gap: 1rem; align-items: center; justify-content: space-around;">${partsHtml}</div>`;
 }).join('') : '<span class="empty-val">Sin datos</span>';
 
 const compas = splitPipe(c.mejores_compas);
