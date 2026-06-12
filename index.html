@@ -795,10 +795,23 @@ function splitPipe(str) {
 // Helper: determina si un string es una URL de imagen
 function isImageUrl(str) {
   if (!str) return false;
-  return str.startsWith('http') && (
-    str.endsWith('.png') || str.endsWith('.jpg') || str.endsWith('.jpeg') || 
-    str.endsWith('.webp') || str.includes('wikia') || str.includes('nocookie')
-  );
+  str = str.trim();
+  // Si no empieza con http, no es URL
+  if (!str.startsWith('http')) return false;
+  // Lista de extensiones de imagen comunes
+  const imageExtensions = /\.(png|jpg|jpeg|gif|webp|svg|bmp|ico)(\?.*)?$/i;
+  if (imageExtensions.test(str)) return true;
+  // Dominios conocidos de imágenes (wikia, nocookie, gg, drive.google.com, etc.)
+  const imageDomains = /(wikia|nocookie|gg|drive\.google\.com|googleusercontent|imgur|ibb\.co|cdn\.discordapp|github\.io)/i;
+  if (imageDomains.test(str)) return true;
+  // Si tiene 'image' en la URL, también lo consideramos
+  if (str.includes('/image/') || str.includes('img=')) return true;
+  // Para URLs de Google Drive: convertir a link directo si es necesario
+  if (str.includes('drive.google.com')) {
+    // Podríamos transformar la URL, pero por ahora la marcamos como imagen
+    return true;
+  }
+  return false;
 }
 
 function renderEmojis(str) {
@@ -975,11 +988,12 @@ function renderChar(c) {
             </div>`;
   }).join('');
 
-  const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
+const engines = c.w_engines ? c.w_engines.split('>').map(s => s.trim()).filter(Boolean) : [];
 const engineHTML = engines.length ? engines.map((e, i) => {
   if (isImageUrl(e)) {
     const borderStyle = i === 0 ? '2px solid var(--accent)' : '1px solid var(--border)';
-    return `<img src="${e}" alt="w-engine" style="width: 48px; height: 48px; border-radius: 8px; border: ${borderStyle}; margin: 0.2rem; background: var(--surface2);" title="W-Engine recomendado">`;
+    // Guardamos el texto original en el atributo data-text
+    return `<img src="${e}" alt="w-engine" data-text="${e.replace(/"/g, '&quot;')}" style="width: 48px; height: 48px; border-radius: 8px; border: ${borderStyle}; margin: 0.2rem; background: var(--surface2); cursor: pointer;" title="W-Engine recomendado" onerror="this.onerror=null; this.outerHTML = '<span class=\'weapon-item ${i===0?'best':''}\'>' + this.getAttribute('data-text') + '</span>' + (${i < engines.length-1} ? '<span class=\'weapon-sep\'>›</span>' : '');">`;
   } else {
     return `<span class="weapon-item ${i===0?'best':''}">${e}</span>${i < engines.length-1 ? '<span class="weapon-sep">›</span>' : ''}`;
   }
@@ -995,8 +1009,9 @@ const compasHTML = compas.length ? compas.map(s => {
   let imageHtml = '';
   let displayName = name;
   if (isImageUrl(name)) {
-    imageHtml = `<img src="${name}" alt="compañero" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;">`;
-    displayName = ''; // si solo hay imagen, no mostramos texto adicional del nombre
+    // Guardamos el texto original en data-text para el onerror
+    imageHtml = `<img src="${name}" alt="compañero" data-text="${name.replace(/"/g, '&quot;')}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
+    displayName = '';
   }
   const reasonText = rest.join('-').trim();
   return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></div></div>`;
@@ -1009,7 +1024,7 @@ const bangbuHTML = bangbus.length ? bangbus.map(s => {
   let imageHtml = '';
   let displayName = name;
   if (isImageUrl(name)) {
-    imageHtml = `<img src="${name}" alt="bangbu" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;">`;
+    imageHtml = `<img src="${name}" alt="bangbu" data-text="${name.replace(/"/g, '&quot;')}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
     displayName = '';
   }
   const reasonText = rest.join('-').trim();
