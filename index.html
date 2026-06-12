@@ -1004,30 +1004,51 @@ const engineHTML = engines.length ? engines.map((e, i) => {
 
 const compas = splitPipe(c.mejores_compas);
 const compasHTML = compas.length ? compas.map(s => {
-  let [name, ...rest] = s.split('-');
-  name = name.trim();
+  let name = s.trim();
+  let reasonText = '';
+  
+  // Si NO es una URL, intentar separar por el primer guión
+  if (!isImageUrl(name)) {
+    const hyphenIndex = name.indexOf('-');
+    if (hyphenIndex !== -1) {
+      reasonText = name.substring(hyphenIndex + 1).trim();
+      name = name.substring(0, hyphenIndex).trim();
+    }
+  }
+  
   let imageHtml = '';
   let displayName = name;
   if (isImageUrl(name)) {
-    // Guardamos el texto original en data-text para el onerror
-    imageHtml = `<img src="${name}" alt="compañero" data-text="${name.replace(/"/g, '&quot;')}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
+    // Guardamos el texto original para el caso de error de carga
+    const safeName = name.replace(/"/g, '&quot;');
+    imageHtml = `<img src="${name}" alt="compañero" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
     displayName = '';
   }
-  const reasonText = rest.join('-').trim();
+  
   return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></div></div>`;
 }).join('') : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
 const bangbus = splitPipe(c.mejor_bangbu);
 const bangbuHTML = bangbus.length ? bangbus.map(s => {
-  let [name, ...rest] = s.split('-');
-  name = name.trim();
+  let name = s.trim();
+  let reasonText = '';
+  
+  if (!isImageUrl(name)) {
+    const hyphenIndex = name.indexOf('-');
+    if (hyphenIndex !== -1) {
+      reasonText = name.substring(hyphenIndex + 1).trim();
+      name = name.substring(0, hyphenIndex).trim();
+    }
+  }
+  
   let imageHtml = '';
   let displayName = name;
   if (isImageUrl(name)) {
-    imageHtml = `<img src="${name}" alt="bangbu" data-text="${name.replace(/"/g, '&quot;')}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
+    const safeName = name.replace(/"/g, '&quot;');
+    imageHtml = `<img src="${name}" alt="bangbu" data-text="${safeName}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); margin-right: 0.5rem;" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';">`;
     displayName = '';
   }
-  const reasonText = rest.join('-').trim();
+  
   return `<div class="info-row"><div class="info-val" style="display: flex; align-items: center; gap: 0.5rem;">${imageHtml}<span>${displayName}${displayName && reasonText ? ' ' : ''}<span class="reason">${reasonText}</span></span></div></div>`;
 }).join('') : '<div class="info-row"><div class="info-val empty-val">Sin datos</div></div>';
 
