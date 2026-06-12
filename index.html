@@ -999,8 +999,30 @@ const engineHTML = engines.length ? engines.map((e, i) => {
   }
 }).join('') : '<span class="empty-val">Sin datos</span>';
 
-  const sets = (c.sets_discos || '').split('>').map(s => s.trim()).filter(Boolean);
-  const setsHTML = sets.length ? sets.map((s, i) => `<div class="disk-set"><span class="rank-num">${i+1}</span>${s}</div>`).join('') : '<span class="empty-val">Sin datos</span>';
+const setsRaw = (c.sets_discos || '').split('>').map(s => s.trim()).filter(Boolean);
+const setsHTML = setsRaw.length ? setsRaw.map((set, idx) => {
+  // Extraer número de piezas al inicio (ej: "4 https://..." o "2 Chaos Jazz")
+  let pieceCount = '';
+  let content = set;
+  const pieceMatch = set.match(/^(\d+)\s+(.+)$/);
+  if (pieceMatch) {
+    pieceCount = pieceMatch[1];
+    content = pieceMatch[2].trim();
+  }
+  let innerHtml = '';
+  if (isImageUrl(content)) {
+    const safeUrl = content.replace(/"/g, '&quot;');
+    innerHtml = `<div style="display: flex; flex-direction: column; align-items: center;">
+      <img src="${content}" alt="set disco" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2);" onerror="this.onerror=null; this.outerHTML = '<span>' + this.getAttribute('data-text') + '</span>';" data-text="${safeUrl}">
+      ${pieceCount ? `<span style="font-size: 0.65rem; margin-top: 0.2rem;">${pieceCount}p</span>` : ''}
+    </div>`;
+  } else {
+    // Texto normal: mostramos el número de piezas (o el índice de prioridad si no hay piezas)
+    const displayNumber = pieceCount || (idx+1).toString();
+    innerHtml = `<span class="rank-num">${displayNumber}</span>${content}`;
+  }
+  return `<div class="disk-set">${innerHtml}</div>`;
+}).join('') : '<span class="empty-val">Sin datos</span>';
 
 const compas = splitPipe(c.mejores_compas);
 const compasHTML = compas.length ? compas.map(s => {
